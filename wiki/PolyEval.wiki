@@ -1,0 +1,5 @@
+#summary Basic introduction to PolyEval
+
+= Introduction =
+
+PolyEval is a polynomial evaluation library written in Fortran that comprises a serial Horner form function and a OpenMP parallelised Estrin's method function. 
