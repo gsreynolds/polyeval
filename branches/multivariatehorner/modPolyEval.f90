@@ -9,22 +9,75 @@ module modPolyEval
 		real (kind=prec) :: x !Value of independent variable
 	end type
 
+	type polynomial2
+   		integer :: n
+   		real (kind=prec), allocatable, dimension(:) :: f !Coefficients of polynomial
+		real (kind=prec) :: x !Value of independent variable
+		real (kind=prec) :: y !Value of independent variable
+	end type
+
+	type polynomial3
+   		integer :: n
+   		real (kind=prec), allocatable, dimension(:) :: f !Coefficients of polynomial
+		real (kind=prec) :: x !Value of independent variable
+		real (kind=prec) :: y !Value of independent variable
+		real (kind=prec) :: z !Value of independent variable
+	end type
+
+	interface EvalHorner
+		module procedure EvalHornerx, EvalHornerxy, EvalHornerxyz
+	end interface
+
     contains
 
 	!Function to evaluate a polynomial using Horner's form
-    double precision function EvalHorner(poly)
+    double precision function EvalHornerx(poly)
 
 		type(polynomial), intent(IN) :: poly
 		integer :: i
 
-		!Evaluate using Horner's Method
-		EvalHorner = poly%f(1)*poly%x
-		do i = 2, poly%n-1
-			EvalHorner = (EvalHorner + poly%f(i))*poly%x
-		end do
-		EvalHorner = EvalHorner + poly%f(poly%n)
+		write(*,*) 'Hornerx'
 
-	end function EvalHorner
+		!Evaluate using Horner's Method
+		EvalHornerx = poly%f(1)*poly%x
+		do i = 2, poly%n-1
+			EvalHornerx = (EvalHornerx + poly%f(i))*poly%x
+		end do
+		EvalHornerx = EvalHornerx + poly%f(poly%n)
+
+	end function EvalHornerx
+
+	double precision function EvalHornerxy(poly)
+
+		type(polynomial2), intent(IN) :: poly
+		integer :: i
+
+		write(*,*) 'Hornerxy'
+
+		!Evaluate using Horner's Method
+		EvalHornerxy = poly%f(1)*poly%x
+		do i = 2, poly%n-1
+			EvalHornerxy = (EvalHornerxy + poly%f(i))*poly%x
+		end do
+		EvalHornerxy = EvalHornerxy + poly%f(poly%n)
+
+	end function EvalHornerxy
+
+	double precision function EvalHornerxyz(poly)
+
+		type(polynomial3), intent(IN) :: poly
+		integer :: i
+
+		write(*,*) 'Hornerxyz'
+
+		!Evaluate using Horner's Method
+		EvalHornerxyz = poly%f(1)*poly%x
+		do i = 2, poly%n-1
+			EvalHornerxyz = (EvalHornerxyz + poly%f(i))*poly%x
+		end do
+		EvalHornerxyz = EvalHornerxyz + poly%f(poly%n)
+
+	end function EvalHornerxyz
 
 	!Function to evaluate a polynomial using Estrin's method
 	double precision function EvalEstrin(poly)

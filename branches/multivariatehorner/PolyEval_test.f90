@@ -9,7 +9,9 @@ program PolyEval_test
 	real (kind=prec) :: startTime, endTime
 	real (kind=prec) :: timeDiff, averageIterTime
 	integer :: loop
-	type(polynomial) poly
+	type(polynomial) :: poly
+	type(polynomial2) :: poly2
+	type(polynomial3) :: poly3
 
 	poly%x = 2.0
 	poly%n = 128
@@ -23,10 +25,56 @@ program PolyEval_test
 		0.0d0, 0.0d0, 0.0d0,m,l,k,j, i, h, g, f, e, d, c, b, a, &
 		0.0d0, 0.0d0, 0.0d0,m,l,k,j, i, h, g, f, e, d, c, b, a/)
 
-	write(*,*) 'Horners Form'
+	write(*,*) 'Horners Form (1 variable)'
 
 	startTime = omp_get_wtime()
 	horner = EvalHorner(poly)
+	endTime = omp_get_wtime()
+
+	timeDiff = endTime - startTime
+    write(*,*) 'result =', horner
+    write(*,*) 'Completed in', timeDiff
+
+	write(*,*)
+    write(*,*) 'Horners Form (2 variables)'
+
+    poly2%x = 2.0
+	poly2%n = 128
+	allocate(poly2%f(poly2%n))
+	poly2%f = (/0.0d0, 0.0d0, 0.0d0,m,l,k,j, i, h, g, f, e, d, c, b, a, &
+		0.0d0, 0.0d0, 0.0d0,m,l,k,j, i, h, g, f, e, d, c, b, a, &
+		0.0d0, 0.0d0, 0.0d0,m,l,k,j, i, h, g, f, e, d, c, b, a, &
+		0.0d0, 0.0d0, 0.0d0,m,l,k,j, i, h, g, f, e, d, c, b, a, &
+		0.0d0, 0.0d0, 0.0d0,m,l,k,j, i, h, g, f, e, d, c, b, a, &
+		0.0d0, 0.0d0, 0.0d0,m,l,k,j, i, h, g, f, e, d, c, b, a, &
+		0.0d0, 0.0d0, 0.0d0,m,l,k,j, i, h, g, f, e, d, c, b, a, &
+		0.0d0, 0.0d0, 0.0d0,m,l,k,j, i, h, g, f, e, d, c, b, a/)
+
+	startTime = omp_get_wtime()
+	horner = EvalHorner(poly2)
+	endTime = omp_get_wtime()
+
+	timeDiff = endTime - startTime
+    write(*,*) 'result =', horner
+    write(*,*) 'Completed in', timeDiff
+
+    write(*,*)
+    write(*,*) 'Horners Form (3 variables)'
+
+    poly3%x = 2.0
+	poly3%n = 128
+	allocate(poly3%f(poly3%n))
+	poly3%f = (/0.0d0, 0.0d0, 0.0d0,m,l,k,j, i, h, g, f, e, d, c, b, a, &
+		0.0d0, 0.0d0, 0.0d0,m,l,k,j, i, h, g, f, e, d, c, b, a, &
+		0.0d0, 0.0d0, 0.0d0,m,l,k,j, i, h, g, f, e, d, c, b, a, &
+		0.0d0, 0.0d0, 0.0d0,m,l,k,j, i, h, g, f, e, d, c, b, a, &
+		0.0d0, 0.0d0, 0.0d0,m,l,k,j, i, h, g, f, e, d, c, b, a, &
+		0.0d0, 0.0d0, 0.0d0,m,l,k,j, i, h, g, f, e, d, c, b, a, &
+		0.0d0, 0.0d0, 0.0d0,m,l,k,j, i, h, g, f, e, d, c, b, a, &
+		0.0d0, 0.0d0, 0.0d0,m,l,k,j, i, h, g, f, e, d, c, b, a/)
+
+	startTime = omp_get_wtime()
+	horner = EvalHorner(poly3)
 	endTime = omp_get_wtime()
 
 	timeDiff = endTime - startTime
@@ -44,7 +92,7 @@ program PolyEval_test
     write(*,*) 'result =', estrin
 	write(*,*) 'Completed in', timeDiff
 
-	write(*,*)
-	write(*,*) 'diff   =', horner-estrin
+	!write(*,*)
+	!write(*,*) 'diff   =', horner-estrin
 
 end program PolyEval_test
