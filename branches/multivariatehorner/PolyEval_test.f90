@@ -8,15 +8,16 @@ program PolyEval_test
 	real (kind=prec) :: x, estrin, horner
 	real (kind=prec) :: startTime, endTime
 	real (kind=prec) :: timeDiff, averageIterTime
-	integer :: loop
+	integer :: loop, numcoeff
 	type(polynomial) :: poly
 	type(polynomial2) :: poly2
 	type(polynomial3) :: poly3
+	real (kind=prec), allocatable, dimension(:) :: coeff
 
-	poly%x = 2.0
-	poly%n = 128
-	allocate(poly%f(poly%n))
-	poly%f = (/0.0d0, 0.0d0, 0.0d0,m,l,k,j, i, h, g, f, e, d, c, b, a, &
+	numcoeff = 128
+	x = 2.0
+	allocate(coeff(numcoeff))
+	coeff = (/0.0d0, 0.0d0, 0.0d0,m,l,k,j, i, h, g, f, e, d, c, b, a, &
 		0.0d0, 0.0d0, 0.0d0,m,l,k,j, i, h, g, f, e, d, c, b, a, &
 		0.0d0, 0.0d0, 0.0d0,m,l,k,j, i, h, g, f, e, d, c, b, a, &
 		0.0d0, 0.0d0, 0.0d0,m,l,k,j, i, h, g, f, e, d, c, b, a, &
@@ -24,6 +25,11 @@ program PolyEval_test
 		0.0d0, 0.0d0, 0.0d0,m,l,k,j, i, h, g, f, e, d, c, b, a, &
 		0.0d0, 0.0d0, 0.0d0,m,l,k,j, i, h, g, f, e, d, c, b, a, &
 		0.0d0, 0.0d0, 0.0d0,m,l,k,j, i, h, g, f, e, d, c, b, a/)
+
+	poly%x = x
+	poly%n = numcoeff
+	allocate(poly%f(poly%n))
+	poly%f = coeff(:)
 
 	write(*,*) 'Horners Form (1 variable)'
 
@@ -38,17 +44,10 @@ program PolyEval_test
 	write(*,*)
     write(*,*) 'Horners Form (2 variables)'
 
-    poly2%x = 2.0
-	poly2%n = 128
+    poly2%x = x
+	poly2%n = numcoeff
 	allocate(poly2%f(poly2%n))
-	poly2%f = (/0.0d0, 0.0d0, 0.0d0,m,l,k,j, i, h, g, f, e, d, c, b, a, &
-		0.0d0, 0.0d0, 0.0d0,m,l,k,j, i, h, g, f, e, d, c, b, a, &
-		0.0d0, 0.0d0, 0.0d0,m,l,k,j, i, h, g, f, e, d, c, b, a, &
-		0.0d0, 0.0d0, 0.0d0,m,l,k,j, i, h, g, f, e, d, c, b, a, &
-		0.0d0, 0.0d0, 0.0d0,m,l,k,j, i, h, g, f, e, d, c, b, a, &
-		0.0d0, 0.0d0, 0.0d0,m,l,k,j, i, h, g, f, e, d, c, b, a, &
-		0.0d0, 0.0d0, 0.0d0,m,l,k,j, i, h, g, f, e, d, c, b, a, &
-		0.0d0, 0.0d0, 0.0d0,m,l,k,j, i, h, g, f, e, d, c, b, a/)
+	poly2%f = coeff(:)
 
 	startTime = omp_get_wtime()
 	horner = EvalHorner(poly2)
@@ -61,17 +60,10 @@ program PolyEval_test
     write(*,*)
     write(*,*) 'Horners Form (3 variables)'
 
-    poly3%x = 2.0
-	poly3%n = 128
+    poly3%x = x
+	poly3%n = numcoeff
 	allocate(poly3%f(poly3%n))
-	poly3%f = (/0.0d0, 0.0d0, 0.0d0,m,l,k,j, i, h, g, f, e, d, c, b, a, &
-		0.0d0, 0.0d0, 0.0d0,m,l,k,j, i, h, g, f, e, d, c, b, a, &
-		0.0d0, 0.0d0, 0.0d0,m,l,k,j, i, h, g, f, e, d, c, b, a, &
-		0.0d0, 0.0d0, 0.0d0,m,l,k,j, i, h, g, f, e, d, c, b, a, &
-		0.0d0, 0.0d0, 0.0d0,m,l,k,j, i, h, g, f, e, d, c, b, a, &
-		0.0d0, 0.0d0, 0.0d0,m,l,k,j, i, h, g, f, e, d, c, b, a, &
-		0.0d0, 0.0d0, 0.0d0,m,l,k,j, i, h, g, f, e, d, c, b, a, &
-		0.0d0, 0.0d0, 0.0d0,m,l,k,j, i, h, g, f, e, d, c, b, a/)
+	poly3%f = coeff(:)
 
 	startTime = omp_get_wtime()
 	horner = EvalHorner(poly3)
