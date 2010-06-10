@@ -3,9 +3,7 @@ program PolyEval_test
 	use modPolyEval
 	implicit none
 
-	real (kind=prec), parameter :: a = 3.068474, b=0.0d0, c=20.857847, d=0.0d0, e=0.757463, f=0.0d0, g=8.673527
-	real (kind=prec), parameter :: h=765.638467, i=0.0d0, j=-20.889708, k=67.786429, l=-0.754380, m= 1120.000000
-	real (kind=prec) :: x, estrin, horner
+	real (kind=prec) :: x, y, z, estrin, horner
 	real (kind=prec) :: startTime, endTime
 	real (kind=prec) :: timeDiff, averageIterTime
 	integer :: loop, numcoeff
@@ -14,17 +12,12 @@ program PolyEval_test
 	type(polynomial3) :: poly3
 	real (kind=prec), allocatable, dimension(:) :: coeff
 
-	numcoeff = 128
+	numcoeff = 6
 	x = 2.0
+	y = 3.0
+	z = 4.0
 	allocate(coeff(numcoeff))
-	coeff = (/0.0d0, 0.0d0, 0.0d0,m,l,k,j, i, h, g, f, e, d, c, b, a, &
-		0.0d0, 0.0d0, 0.0d0,m,l,k,j, i, h, g, f, e, d, c, b, a, &
-		0.0d0, 0.0d0, 0.0d0,m,l,k,j, i, h, g, f, e, d, c, b, a, &
-		0.0d0, 0.0d0, 0.0d0,m,l,k,j, i, h, g, f, e, d, c, b, a, &
-		0.0d0, 0.0d0, 0.0d0,m,l,k,j, i, h, g, f, e, d, c, b, a, &
-		0.0d0, 0.0d0, 0.0d0,m,l,k,j, i, h, g, f, e, d, c, b, a, &
-		0.0d0, 0.0d0, 0.0d0,m,l,k,j, i, h, g, f, e, d, c, b, a, &
-		0.0d0, 0.0d0, 0.0d0,m,l,k,j, i, h, g, f, e, d, c, b, a/)
+	coeff = (/4,3,3,2,1,-80/)
 
 	poly%x = x
 	poly%n = numcoeff
@@ -45,9 +38,15 @@ program PolyEval_test
     write(*,*) 'Horners Form (2 variables)'
 
     poly2%x = x
+    poly2%y = y
 	poly2%n = numcoeff
+
 	allocate(poly2%f(poly2%n))
+	allocate(poly2%powers(2,poly2%n-1))
+
 	poly2%f = coeff(:)
+	poly2%powers(1,:) = (/3,2,2/)
+	poly2%powers(2,:) = (/1,0,1/)
 
 	startTime = omp_get_wtime()
 	horner = EvalHorner(poly2)
@@ -61,9 +60,17 @@ program PolyEval_test
     write(*,*) 'Horners Form (3 variables)'
 
     poly3%x = x
+    poly3%y = y
+    poly3%z = z
 	poly3%n = numcoeff
+
 	allocate(poly3%f(poly3%n))
+	allocate(poly3%powers(3,poly3%n-1))
+
 	poly3%f = coeff(:)
+	poly3%powers(1,:) = (/5,4,3,1,0/)
+	poly3%powers(2,:) = (/0,4,1,1,0/)
+	poly3%powers(3,:) = (/0,4,3,0,1/)
 
 	startTime = omp_get_wtime()
 	horner = EvalHorner(poly3)
@@ -74,7 +81,7 @@ program PolyEval_test
     write(*,*) 'Completed in', timeDiff
 
 	write(*,*)
-	write(*,*) 'Estrins Method'
+	write(*,*) 'Estrins Method (1 variable)'
 
 	startTime = omp_get_wtime()
 	estrin = EvalEstrin(poly)
