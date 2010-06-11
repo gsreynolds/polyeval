@@ -68,9 +68,10 @@ module modPolyEval
 		real(kind=prec), dimension(100, 3, poly%n-1) :: factorisation, unfactorised
 		real(kind=prec) :: xfactpower, yfactpower, zfactpower, xunfactpower, yunfactpower, zunfactpower, unfactorisedSum
 
-		integer, dimension(3) :: N, M
-		integer :: maxNloc, minAloc, i, j, k, l, unfactorisableCount, V, W, numsteps
-		integer, dimension(poly%n-1) :: factor, A, B
+		integer, dimension(3) :: N
+		integer :: maxNloc, minAloc, i, j, k, l, unfactorisableCount, V, W, numsteps, numUnfactorisedMonomials
+		integer, dimension(100) :: factor, M, constantCoeff
+		integer, dimension(poly%n-1) :: A, B
 		logical, dimension(3) :: selectMask
 		logical, dimension(poly%n-1) :: factoredOutMask
 
@@ -78,22 +79,38 @@ module modPolyEval
 
 		powers = poly%powers
 		i = 0
+		write(*,*) 'xpowers', powers(1, :)
+		write(*,*) 'ypowers', powers(2, :)
+		write(*,*) 'zpowers', powers(3, :)
 
 		factorisation(:,:,:) = 0
 		unfactorised(:,:,:) = 0
+		constantCoeff(:) = 0
 		A(:) = 0
 		factoredOutMask(:) = .true.
-		do while (sum(powers) > poly%n-1)
+		!do while (sum(powers) > poly%n-1)
+		do while (i < 10)
 			i = i + 1
+			write(*,*) '============'
+			write(*,*)
+			write(*,*) 'i', i
+			write(*,*) sum(powers)
+			write(*,*) 'factored out mask', factoredOutMask(:)
+
+			write(*,*)
+			write(*,*) 'powers'
+			write(*,*) powers(1,:)
+			write(*,*) powers(2,:)
+			write(*,*) powers(3,:)
 
 			!by the variables
 			N(1) = count(powers(1,:) > 0)
 			N(2) = count(powers(2,:) > 0)
 			N(3) = count(powers(3,:) > 0)
-			!write(*,*) 'N', N
+			write(*,*) 'N', N
 
 			maxNloc = maxloc(N,1)
-			!write(*,*) 'maxNloc', maxNloc, 'i.e. the factor, x=1, y=2, z=3'
+			write(*,*) 'maxNloc', maxNloc, 'i.e. the factor, x=1, y=2, z=3'
 			factor(i) = maxNloc
 
 			do j = 1, 3
@@ -119,34 +136,40 @@ module modPolyEval
 			end do
 !			unfactorisableCount = count(powers(maxNloc, :) .eq. 0)
 			!count is the number of monomials that do not contain the current variable being considered, x,y or z.
-			!write(*,*) 'unfactorisable count', unfactorisableCount
+			write(*,*) 'unfactorisable count', unfactorisableCount
 
 			if (unfactorisableCount > 0) then
 				do j=1, unfactorisableCount
-					!write(*,*) '-----'
+						write(*,*) '-----'
 					!by the monomials
 					A(:) = 0
 
-					!write(*,*) powers(maxNloc, :)
-					!write(*,*) 'factored out mask', factoredOutMask(:)
+					write(*,*) powers(maxNloc, :)
+					write(*,*) 'factored out mask', factoredOutMask(:)
 					minAloc = minloc(powers(maxNloc, :), 1, factoredOutMask)
 
 					write(*,*) 'minAloc', minAloc, 'i.e. monomial', minAloc, 'is not factorisable'
 
 					do k = 1, 3
 
-						!write(*,*) k
-						!write(*,*) powers(k, minAloc)
+						write(*,*) 'k', k
+						write(*,*) '!!!!'
+						write(*,*) powers(k, minAloc)
 						unfactorised(i, k, minAloc) = powers(k, minAloc)
 						powers(k, minAloc) = 0
 
-						if (powers(k, minAloc) .eq. 0) then
-						factoredOutMask(minAloc) = .false.
+						if (sum(powers(:, minAloc)) .eq. 0) then
+							!write(*,*) '!!!!!!!!!!!', minAloc
+							factoredOutMask(minAloc) = .false.
+							constantCoeff(i) = minAloc
+							!write(*,*) 'i', i
 						else
 							factoredOutMask(minAloc) = .true.
 						end if
 
 					end do
+
+					write(*,*) 'factored out mask', factoredOutMask(:)
 
 				end do
 			end if
@@ -154,11 +177,22 @@ module modPolyEval
 			where (powers(maxNloc,:) > 0) powers(maxNloc,:) = powers(maxNloc,:) - 1
 
 			factorisation(i,:,:) = powers(:,:)
+			write(*,*) 'factorised'
+			write(*,*) 'x', factorisation(i, 1, :)
+			write(*,*) 'y', factorisation(i, 2, :)
+			write(*,*) 'z', factorisation(i, 3, :)
+
+			write(*,*) 'unfactorised'
+			write(*,*) 'x', unfactorised(i, 1, :)
+			write(*,*) 'y', unfactorised(i, 2, :)
+			write(*,*) 'z', unfactorised(i, 3, :)
 
 		end do
 
-		numsteps = i - 1
+		numsteps = i
 		write(*,*)
+
+		write(*,*) 'constantCoeff', constantCoeff(1:numsteps)
 
 		EvalHornerxyz = 0
 
@@ -167,22 +201,23 @@ module modPolyEval
 		factorValue(3) = poly%z
 
 		!write(*,*) 'numsteps', numsteps
+		numUnfactorisedMonomials = count(factoredOutMask .eqv. .true.)
+		write(*,*) 'numUnfactorisedMonomials', numUnfactorisedMonomials
 
-
-		do j = 1, poly%n-1
+		do j = 1, numUnfactorisedMonomials
 			!j by the monomials
 
 			!write(*,*) ';;;', j
 
-			xfactpower = factorisation(k, 1, j)
-			yfactpower = factorisation(k, 2, j)
-			zfactpower = factorisation(k, 3, j)
-			A(:) = factorisation(k, :,j)
+			xfactpower = factorisation(numsteps, 1, j)
+			yfactpower = factorisation(numsteps, 2, j)
+			zfactpower = factorisation(numsteps, 3, j)
+			A(:) = factorisation(numsteps, :,j)
 
-			xunfactpower = unfactorised(k, 1, j)
-			yunfactpower = unfactorised(k, 2, j)
-			zunfactpower = unfactorised(k, 3, j)
-			B(:) = unfactorised(k, :,j)
+			xunfactpower = unfactorised(numsteps, 1, j)
+			yunfactpower = unfactorised(numsteps, 2, j)
+			zunfactpower = unfactorised(numsteps, 3, j)
+			B(:) = unfactorised(numsteps, :,j)
 
 			if (sum(A(:)) .eq. 0) then
 				V = 0
@@ -191,52 +226,72 @@ module modPolyEval
 			end if
 
 			if (sum(B(:)) .eq. 0) then
+				!do i = 1, poly%n-1
 				W = 0
+				!end do
 			else
 				W = 1
 			end if
 
 			!write(*,*) 'V', V, 'W', W
+			write(*,*) 'factor', factor(1)
+			write(*,*) 'factor value',factorValue(factor(1))
+			write(*,*) 'V', V
+			write(*,*) poly%f(j),poly%x,xfactpower,poly%y,yfactpower,poly%z,zfactpower
+			write(*,*) 'W', W
+			write(*,*) poly%f(j),poly%x,xunfactpower,poly%y,yunfactpower,poly%z,zunfactpower
 
-			EvalHornerxyz = EvalHornerxyz + factorValue(factor(k)) *&
+			EvalHornerxyz = EvalHornerxyz + factorValue(factor(numsteps)) *&
 							(V*poly%f(j)*poly%x**xfactpower*poly%y**yfactpower*poly%z**zfactpower) +&
  							(W*poly%f(j)*poly%x**xunfactpower*poly%y**yunfactpower*poly%z**zunfactpower)
-			!write(*,*) 'result', EvalHornerxyz
+			write(*,*) 'result', EvalHornerxyz
 
 		end do
 
 
-		!write(*,*)
-		!write(*,*)
+		write(*,*)
+		write(*,*)
+
+		write(*,*) 'factor', factor(1:numsteps)
+		!numFactorisedMonomials = poly%n-1-numUnfactorisedMonomials
 
 		do k=numsteps-1, 1, -1
 
+			write(*,*) 'k', k
 			unfactorisedSum = 0
 
-			do j = 1, poly%n-1
-
+			do j = numUnfactorisedMonomials+1, poly%n-1
+				write(*,*) 'j', j
 				xunfactpower = unfactorised(k, 1, j)
 				yunfactpower = unfactorised(k, 2, j)
 				zunfactpower = unfactorised(k, 3, j)
 
 				B(:) = unfactorised(k, :,j)
 
+				write(*,*) 'unfactpow'
+				write(*,*) B(:)
+
 
 				if (sum(B(:)) .eq. 0) then
-					W = 0
+					if(j .eq. constantCoeff(k)) then
+						unfactorisedSum = unfactorisedSum + (poly%f(j))
+						write(*,*) 'j .eq. constantCoeff(k)', j, constantCoeff(k)
+					end if
 				else
-					W = 1
+					unfactorisedSum = unfactorisedSum+ &
+								(poly%f(j) * poly%x ** xunfactpower * poly%y ** yunfactpower * poly%z ** zunfactpower)
 				end if
 
-				unfactorisedSum = unfactorisedSum+ &
-								(W * poly%f(j) * poly%x ** xunfactpower * poly%y ** yunfactpower * poly%z ** zunfactpower)
 
-				!write(*,*) 'unfactorisedSum', unfactorisedSum
+				write(*,*) 'unfactorisedSum', unfactorisedSum
 
 			end do
 
-			EvalHornerxyz = factorValue(factor(k))*(EvalHornerxyz) + unfactorisedSum
-			!write(*,*) EvalHornerxyz
+			write(*,*) 'numsteps-k', numsteps-k+1
+			write(*,*) 'factor', factor(numsteps-k+1)
+			write(*,*) 'factor value',factorValue(factor(numsteps-k+1))
+			EvalHornerxyz = factorValue(factor(numsteps-k+1))*(EvalHornerxyz) + unfactorisedSum
+			write(*,*) EvalHornerxyz
 		end do
 		EvalHornerxyz = EvalHornerxyz + poly%f(poly%n)
 
