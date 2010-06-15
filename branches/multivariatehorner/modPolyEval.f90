@@ -74,6 +74,7 @@ module modPolyEval
 		integer, dimension(poly%n-1) :: A, B
 		logical, dimension(3) :: selectMask
 		logical, dimension(poly%n-1) :: factoredOutMask
+		logical :: loop
 
 		write(*,*) 'Hornerxyz'
 
@@ -88,8 +89,14 @@ module modPolyEval
 		constantCoeff(:) = 0
 		A(:) = 0
 		factoredOutMask(:) = .true.
+		loop = .true.
 		!do while (sum(powers) > poly%n-1)
-		do while (i < 10)
+		do while (loop .eqv. .true.)
+
+			if (count(factoredOutMask(:) .eqv. .true.) .eq. 0) then
+				loop = .false.
+			end if
+
 			i = i + 1
 			write(*,*) '============'
 			write(*,*)
