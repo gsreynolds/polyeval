@@ -12,12 +12,12 @@ program PolyEval_test
 	type(polynomial3) :: poly3
 	real (kind=prec), allocatable, dimension(:) :: coeff
 
-	numcoeff = 4
+	numcoeff = 6
 	x = 2.0
 	y = 3.0
 	z = 4.0
 	allocate(coeff(numcoeff))
-	coeff = (/20.14000000000,10.20,2.21,-6982080.0/)
+	coeff = (/4,3,3,2,1,-80/)
 
 	poly%x = x
 	poly%n = numcoeff
@@ -68,9 +68,9 @@ program PolyEval_test
 	allocate(poly3%powers(3,poly3%n-1))
 
 	poly3%f = coeff(:)
-	poly3%powers(1,:) = (/10,4,2/)
-	poly3%powers(2,:) = (/4,3,2/)
-	poly3%powers(3,:) = (/3,2,0/)
+	poly3%powers(1,:) = (/5,4,3,2,1/)
+	poly3%powers(2,:) = (/0,0,0,0,0/)
+	poly3%powers(3,:) = (/0,0,0,0,0/)
 
 	startTime = omp_get_wtime()
 	horner = EvalHorner(poly3)
