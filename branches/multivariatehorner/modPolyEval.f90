@@ -266,13 +266,13 @@ module modPolyEval
 				yunfactpower = unfactorised(k, 2, j)
 				zunfactpower = unfactorised(k, 3, j)
 
-				B(:) = unfactorised(k, :,j)
+				!B(:) =
 
 				write(*,*) 'unfactpow'
-				write(*,*) B(:)
+				!write(*,*) B(:)
 
 
-				if (sum(B(:)) .eq. 0) then
+				if (sum(unfactorised(k, :,j)) .eq. 0) then
 					if(j .eq. constantCoeff(k)) then
 						unfactorisedSum = unfactorisedSum + (poly%f(j))
 						write(*,*) 'j .eq. constantCoeff(k)', j, constantCoeff(k)
