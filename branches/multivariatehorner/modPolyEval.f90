@@ -66,7 +66,8 @@ module modPolyEval
 		integer :: var, i, j, k, numSteps
 		integer, dimension(3) :: numFactors
 		real(kind=prec), dimension(3, poly%n-1) ::powers, factorisation
-		real(kind=prec), dimension(3) :: monomial, variables
+		real(kind=prec), dimension(poly%n) :: monomial
+		real(kind=prec), dimension(3) :: variables
 		real(kind=prec), allocatable, dimension(:) :: factors
 
 		write(*,*) 'Hornerxyz'
