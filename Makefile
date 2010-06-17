@@ -2,7 +2,7 @@ MF=	Makefile
 
 FC=	gfortran
 
-FFLAGS= -O3 -fopenmp
+FFLAGS= -O3 -fopenmp -fbounds-check
 
 LFLAGS=
 
