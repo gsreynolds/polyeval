@@ -30,6 +30,10 @@ module modPolyEval
 		module procedure Evalx, Evalxy, Evalxyz
 	end interface
 
+	interface EvalHorner
+		module procedure EvalHornerx, EvalHornerxy, EvalHornerxyz
+	end interface
+
     contains
 
     !Function to evaluate a univariate polynomial by brute force
@@ -80,22 +84,85 @@ module modPolyEval
 
    	end function Evalxyz
 
-	!Function to evaluate a polynomial using Horner's form
-    double precision function EvalHorner(poly)
+	!Function to evaluate a univariate polynomial using Horner's form
+    double precision function EvalHornerx(poly)
 
 		type(polynomial), intent(IN) :: poly
 		integer :: i
 
 		!Evaluate using Horner's Method
-		EvalHorner = poly%f(1)*poly%x
+		EvalHornerx = poly%f(1)*poly%x
 		do i = 2, poly%n-1
-			EvalHorner = (EvalHorner + poly%f(i))*poly%x
+			EvalHornerx = (EvalHornerx + poly%f(i))*poly%x
 		end do
-		EvalHorner = EvalHorner + poly%f(poly%n)
+		EvalHornerx = EvalHornerx + poly%f(poly%n)
 
-	end function EvalHorner
+	end function EvalHornerx
 
-	!Function to evaluate a polynomial using Estrin's method
+	!Function to evaluate a bivariate polynomial using Horner's form
+    double precision function EvalHornerxy(poly)
+
+		type(polynomial2), intent(IN) :: poly
+		real(kind=prec), dimension(2) :: variables
+		real(kind=prec), dimension(poly%n) :: b
+		real(kind=prec) :: temp
+		integer :: i, j
+
+		variables(1) = poly%x
+		variables(2) = poly%y
+
+		b(1) = poly%f(1)
+		do i = 2,poly%n
+			if(poly%powers(1,i) .eq. 1) then
+				temp = variables(1)
+			else
+				temp = 1
+			end if
+			do j = 2,2
+				if(poly%powers(j,i) .eq. 1) then
+			    	temp = variables(j)*temp
+			    end if
+			end do
+			b(i) = poly%f(i) + temp*b(i-1)
+		end do
+
+		EvalHornerxy = sum(b)
+
+	end function EvalHornerxy
+
+	!Function to evaluate a trivariate polynomial using Horner's form
+    double precision function EvalHornerxyz(poly)
+
+		type(polynomial3), intent(IN) :: poly
+		real(kind=prec), dimension(3) :: variables
+		real(kind=prec), dimension(poly%n) :: b
+		real(kind=prec) :: temp
+		integer :: i, j
+
+		variables(1) = poly%x
+		variables(2) = poly%y
+		variables(3) = poly%z
+
+		b(1) = poly%f(1)
+		do i = 2,poly%n
+			if(poly%powers(1,i) .eq. 1) then
+				temp = variables(1)
+			else
+				temp = 1
+			end if
+			do j = 2,3
+				if(poly%powers(j,i) .eq. 1) then
+			    	temp = variables(j)*temp
+			    end if
+			end do
+			b(i) = poly%f(i) + temp*b(i-1)
+		end do
+
+		EvalHornerxyz = sum(b)
+
+	end function EvalHornerxyz
+
+	!Function to evaluate a univariate polynomial using Estrin's method
 	double precision function EvalEstrin(poly)
 		use omp_lib
 
