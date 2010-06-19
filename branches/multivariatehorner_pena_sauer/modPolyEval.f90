@@ -110,7 +110,64 @@ module modPolyEval
 
 		type(polynomial3), intent(IN) :: poly
 
-		EvalHornerxyz = 0
+		integer :: di !effective number of variables
+		real(kind=prec), dimension(0:3) :: r !registers for summation
+		integer, dimension(3) :: i !counters for linear functions
+		integer, dimension(3) :: tempjarr
+		integer :: k, n, var, M, j, l
+		real(kind=prec) :: tempsum
+
+		di = 3
+		r(:) = 0
+		r(0) = poly%f(poly%n)
+		!do k = 1, di
+		i(:) = 0
+		!end do
+
+		M = poly%n - 1
+
+
+		do n = 2, M
+			!determine k = max(1 <= j <= di : a(n)j != a(n-1)j)
+			tempjarr(:) = 0
+			do j = 1,3
+				if (poly%powers(j, n) .ne. poly%powers(j, n-1)) then
+					tempjarr(j) = j
+				end if
+			end do
+			!write(*,*) tempjarr
+			k = maxval(tempjarr)
+			write(*,*) 'k', k
+
+			!set ik = ik-1
+			i(k) = i(k) - 1
+			write(*,*) 'i(k)', i(k)
+
+			!set rk = lk,ik(x)(r0 + r1 + ... + rk)
+			tempsum = 0
+			do l = 0,k
+				tempsum = tempsum + r(l)
+			end do
+			r(k) = tempsum!*lk,ik(x)????
+			write(*,*) 'r(k)', r(k)
+
+			!set r0=ca(n), r1...rk-1=0
+			r(0) = poly%f(n)
+			r(1:k-1) = 0
+
+			!set i1=a(n)1,..., ik-1=a(n)k-1
+			do l=1, k-1
+				i(l) = poly%powers(l,n)
+				write(*,*) 'i(l)', i(l)
+			end do
+
+			write(*,*) 'i', i
+
+		end do
+
+		write(*,*) 'r', r
+
+		EvalHornerxyz = sum(r)
 
 	end function EvalHornerxyz
 
