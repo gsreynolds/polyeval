@@ -5,7 +5,7 @@ program PolyEval_test
 
 	real (kind=prec), parameter :: a = 3.068474, b=0.0d0, c=20.857847, d=0.0d0, e=0.757463, f=0.0d0, g=8.673527
 	real (kind=prec), parameter :: h=765.638467, i=0.0d0, j=-20.889708, k=67.786429, l=-0.754380, m= 1120.000000
-	real (kind=prec) :: x, estrin, horner, brutex, brutexy, brutexyz
+	real (kind=prec) :: x, estrin, horner, brutex, brutexy, brutexyz, hornerxy, hornerxyz
 	real (kind=prec) :: startTime, endTime
 	real (kind=prec) :: timeDiff, averageIterTime
 	integer :: loop
@@ -48,6 +48,17 @@ program PolyEval_test
     write(*,*) 'result =', brutexy
     write(*,*) 'Completed in', timeDiff
     write(*,*)
+    
+ 	write(*,*) 'Horner xy'
+
+	startTime = omp_get_wtime()
+	hornerxy = EvalHorner(poly2)
+	endTime = omp_get_wtime()
+
+	timeDiff = endTime - startTime
+    write(*,*) 'result =', hornerxy
+    write(*,*) 'Completed in', timeDiff
+    write(*,*)
 
     write(*,*) 'Brute force xyz'
 
@@ -68,6 +79,17 @@ program PolyEval_test
 
 	timeDiff = endTime - startTime
     write(*,*) 'result =', brutexyz
+    write(*,*) 'Completed in', timeDiff
+    write(*,*)
+
+    write(*,*) 'Horner xyz'
+
+	startTime = omp_get_wtime()
+	hornerxyz = EvalHorner(poly3)
+	endTime = omp_get_wtime()
+
+	timeDiff = endTime - startTime
+    write(*,*) 'result =', hornerxyz
     write(*,*) 'Completed in', timeDiff
     write(*,*)
 

@@ -30,6 +30,10 @@ module modPolyEval
 		module procedure Evalx, Evalxy, Evalxyz
 	end interface
 
+	interface EvalHorner
+		module procedure EvalHornerx, EvalHornerxy, EvalHornerxyz
+	end interface
+
     contains
 
     !Function to evaluate a univariate polynomial by brute force
@@ -81,19 +85,34 @@ module modPolyEval
    	end function Evalxyz
 
 	!Function to evaluate a polynomial using Horner's form
-    double precision function EvalHorner(poly)
+    double precision function EvalHornerx(poly)
 
 		type(polynomial), intent(IN) :: poly
 		integer :: i
 
 		!Evaluate using Horner's Method
-		EvalHorner = poly%f(1)*poly%x
+		EvalHornerx = poly%f(1)*poly%x
 		do i = 2, poly%n-1
-			EvalHorner = (EvalHorner + poly%f(i))*poly%x
+			EvalHornerx = (EvalHornerx + poly%f(i))*poly%x
 		end do
-		EvalHorner = EvalHorner + poly%f(poly%n)
+		EvalHornerx = EvalHornerx + poly%f(poly%n)
 
-	end function EvalHorner
+	end function EvalHornerx
+
+    double precision function EvalHornerxy(poly)
+
+		type(polynomial2), intent(IN) :: poly
+		EvalHornerxy = 0
+
+	end function EvalHornerxy
+
+    double precision function EvalHornerxyz(poly)
+
+		type(polynomial3), intent(IN) :: poly
+
+		EvalHornerxyz = 0
+
+	end function EvalHornerxyz
 
 	!Function to evaluate a polynomial using Estrin's method
 	double precision function EvalEstrin(poly)
