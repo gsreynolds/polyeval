@@ -35,10 +35,10 @@ program PolyEval_test
     poly2%y=3.0
     poly2%n=poly%n
     allocate(poly2%f(poly2%n))
-    allocate(poly2%powers(2,poly2%n-1))
+    allocate(poly2%powers(2,poly2%n))
     poly2%f = poly%f
-	poly2%powers(1,:) = (/2,2,1,1,1,0/)
-	poly2%powers(2,:) = (/2,1,2,1,0,1/)
+	poly2%powers(1,:) = (/2,2,1,1,1,0,0/)
+	poly2%powers(2,:) = (/2,1,2,1,0,1,0/)
 
 	startTime = omp_get_wtime()
 	brutexy = Eval(poly2)
@@ -67,11 +67,11 @@ program PolyEval_test
     poly3%z=4.0
     poly3%n=poly%n
     allocate(poly3%f(poly3%n))
-    allocate(poly3%powers(3,poly3%n-1))
+    allocate(poly3%powers(3,poly3%n))
     poly3%f = poly%f
-	poly3%powers(1,:) = (/2,2,1,1,1,0/)
-	poly3%powers(2,:) = (/2,1,2,1,0,1/)
-	poly3%powers(3,:) = (/0,0,0,0,0,0/)
+	poly3%powers(1,:) = (/2,2,1,1,1,0,0/)
+	poly3%powers(2,:) = (/2,1,2,1,0,1,0/)
+	poly3%powers(3,:) = (/0,0,0,0,0,0,0/)
 
 	startTime = omp_get_wtime()
 	brutexyz = Eval(poly3)
