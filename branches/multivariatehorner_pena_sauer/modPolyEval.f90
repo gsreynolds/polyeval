@@ -116,28 +116,42 @@ module modPolyEval
 		integer, dimension(3) :: tempjarr
 		integer :: k, n, var, M, j, l
 		real(kind=prec) :: tempsum
+		real(kind=prec), dimension(3) :: variables
 
-		di = 3
+		do j = 1,3
+			if (maxval(poly%powers(j,:)) .gt. 0) then
+				tempjarr = j
+			end if
+		end do
+		di = maxval(tempjarr)
+		write(*,*) 'di', di
 		r(:) = 0
-		r(0) = poly%f(poly%n)
-		!do k = 1, di
+		r(0) = poly%f(1)
 		i(:) = 0
-		!end do
+		do k = 1, di
+			i(k) = poly%powers(k,1)
+		end do
 
-		M = poly%n - 1
+		variables(1) = poly%x
+		variables(2) = poly%y
+		variables(3) = poly%z
 
+		write(*,*) 'i', i
+
+		M = poly%n
 
 		do n = 2, M
+			write(*,*) 'n', n
 			!determine k = max(1 <= j <= di : a(n)j != a(n-1)j)
 			tempjarr(:) = 0
-			do j = 1,3
+			do j = 1,di
 				if (poly%powers(j, n) .ne. poly%powers(j, n-1)) then
-					tempjarr(j) = j
+						tempjarr(j) = j
 				end if
 			end do
-			!write(*,*) tempjarr
+			write(*,*) 'tempjarr', tempjarr
 			k = maxval(tempjarr)
-			write(*,*) 'k', k
+			write(*,*) 'k', k, '!!!!'
 
 			!set ik = ik-1
 			i(k) = i(k) - 1
@@ -148,21 +162,24 @@ module modPolyEval
 			do l = 0,k
 				tempsum = tempsum + r(l)
 			end do
-			r(k) = tempsum!*lk,ik(x)????
+
+			r(k) = tempsum*variables(k)
 			write(*,*) 'r(k)', r(k)
 
 			!set r0=ca(n), r1...rk-1=0
 			r(0) = poly%f(n)
 			r(1:k-1) = 0
 
+			write(*,*) 'r', r
+
 			!set i1=a(n)1,..., ik-1=a(n)k-1
 			do l=1, k-1
 				i(l) = poly%powers(l,n)
-				write(*,*) 'i(l)', i(l)
+				!write(*,*) 'i(l)', i(l)
 			end do
 
 			write(*,*) 'i', i
-
+			write(*,*)
 		end do
 
 		write(*,*) 'r', r
