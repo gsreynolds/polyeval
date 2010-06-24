@@ -64,23 +64,14 @@ module modPolyEval
    		x2 = poly%x*poly%x
 
    		do i = 1, poly%n-1
-   			!write(*,*) 'i', i
-   			!write(*,*) 'poly%n-i', poly%n-i
 			monomial(i) = poly%f(i)
 			numSteps = (poly%n-i)/2
-			!write(*,*) 'numSteps', numSteps
 			do j = 1, numSteps
-				!write(*,*) 'j', j
 				monomial(i) = monomial(i) * x2
 			end do
-			!write(*,*) '(j-1)*2', (j-1)*2
-
-			!if ((poly%n-i)-(j-1)*2 .eq. 1) then
 			if (mod(poly%n-i, 2) .ne. 0) then
-				!write(*,*) 'remainder 1'
 				monomial(i) = monomial(i) * poly%x
    			end if
-   			!write(*,*)
    		end do
 
    		monomial(poly%n) = poly%f(poly%n)
