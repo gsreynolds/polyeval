@@ -5,7 +5,7 @@ program PolyEval_test
 
 	real (kind=prec), parameter :: a = 3.068474, b=0.0d0, c=20.857847, d=0.0d0, e=0.757463, f=0.0d0, g=8.673527
 	real (kind=prec), parameter :: h=765.638467, i=0.0d0, j=-20.889708, k=67.786429, l=-0.754380, m= 1120.000000
-	real (kind=prec) :: x, estrin, horner, brutex, brutexy, brutexyz
+	real (kind=prec) :: x, estrin, horner, brutex, brutexy, brutexyz, bruteoptx, bruteoptxy, bruteoptxyz
 	real (kind=prec) :: startTime, endTime
 	real (kind=prec) :: timeDiff, averageIterTime
 	integer :: loop
@@ -16,7 +16,7 @@ program PolyEval_test
 	poly%x = 2.0
 	poly%n = 7
 	allocate(poly%f(poly%n))
-	poly%f = (/g, f, e, d, c, b, a/)
+	poly%f = (/a,a,a,a,a,a,a/)
 
 	write(*,*) 'Brute force x'
 
@@ -26,6 +26,17 @@ program PolyEval_test
 
 	timeDiff = endTime - startTime
     write(*,*) 'result =', brutex
+    write(*,*) 'Completed in', timeDiff
+    write(*,*)
+
+    write(*,*) 'Brute force (optimised) x'
+
+	startTime = omp_get_wtime()
+	bruteoptx = EvalOpt(poly)
+	endTime = omp_get_wtime()
+
+	timeDiff = endTime - startTime
+    write(*,*) 'result =', bruteoptx
     write(*,*) 'Completed in', timeDiff
     write(*,*)
 
@@ -49,6 +60,16 @@ program PolyEval_test
     write(*,*) 'Completed in', timeDiff
     write(*,*)
 
+    write(*,*) 'Brute force (optimised) xy'
+	startTime = omp_get_wtime()
+	bruteoptxy = EvalOpt(poly2)
+	endTime = omp_get_wtime()
+
+	timeDiff = endTime - startTime
+    write(*,*) 'result =', bruteoptxy
+    write(*,*) 'Completed in', timeDiff
+    write(*,*)
+
     write(*,*) 'Brute force xyz'
 
     poly3%x=2.0
@@ -68,6 +89,17 @@ program PolyEval_test
 
 	timeDiff = endTime - startTime
     write(*,*) 'result =', brutexyz
+    write(*,*) 'Completed in', timeDiff
+    write(*,*)
+
+    write(*,*) 'Brute force (optimised) xyz'
+
+	startTime = omp_get_wtime()
+	bruteoptxyz = EvalOpt(poly3)
+	endTime = omp_get_wtime()
+
+	timeDiff = endTime - startTime
+    write(*,*) 'result =', bruteoptxyz
     write(*,*) 'Completed in', timeDiff
     write(*,*)
 
