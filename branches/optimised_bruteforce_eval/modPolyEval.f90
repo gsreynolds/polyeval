@@ -59,9 +59,9 @@ module modPolyEval
    		type(polynomial), intent(IN) :: poly
    		integer :: i, j, numSteps
    		real (kind=prec), dimension(poly%n) :: monomial
-   		real (kind=prec) :: z
+   		real (kind=prec) :: x2
 
-   		z = poly%x*poly%x
+   		x2 = poly%x*poly%x
 
    		do i = 1, poly%n-1
    			!write(*,*) 'i', i
@@ -71,7 +71,7 @@ module modPolyEval
 			!write(*,*) 'numSteps', numSteps
 			do j = 1, numSteps
 				!write(*,*) 'j', j
-				monomial(i) = monomial(i) * z
+				monomial(i) = monomial(i) * x2
 			end do
 			!write(*,*) '(j-1)*2', (j-1)*2
 
