@@ -3,6 +3,7 @@ program PolyEval_test
 	use modPolyEval
 	implicit none
 
+	integer, parameter :: MAXITER = 1!000000000
 	real (kind=prec), parameter :: a = 3.068474, b=0.0d0, c=20.857847, d=0.0d0, e=0.757463, f=0.0d0, g=8.673527
 	real (kind=prec), parameter :: h=765.638467, i=0.0d0, j=-20.889708, k=67.786429, l=-0.754380, m= 1120.000000
 	real (kind=prec) :: x, estrin, horner, brutex, brutexy, brutexyz, bruteoptx, bruteoptxy, bruteoptxyz
@@ -21,7 +22,9 @@ program PolyEval_test
 	write(*,*) 'Brute force x'
 
 	startTime = omp_get_wtime()
-	brutex = Eval(poly)
+	do loop = 1, MAXITER
+		brutex = Eval(poly)
+	end do
 	endTime = omp_get_wtime()
 
 	timeDiff = endTime - startTime
@@ -32,7 +35,9 @@ program PolyEval_test
     write(*,*) 'Brute force (optimised) x'
 
 	startTime = omp_get_wtime()
-	bruteoptx = EvalOpt(poly)
+	do loop = 1, MAXITER
+		bruteoptx = EvalOpt(poly)
+	end do
 	endTime = omp_get_wtime()
 
 	timeDiff = endTime - startTime
@@ -52,7 +57,9 @@ program PolyEval_test
 	poly2%powers(2,:) = (/2,1,2,1,0,1/)
 
 	startTime = omp_get_wtime()
-	brutexy = Eval(poly2)
+	do loop = 1, MAXITER
+		brutexy = Eval(poly2)
+	end do
 	endTime = omp_get_wtime()
 
 	timeDiff = endTime - startTime
@@ -62,7 +69,9 @@ program PolyEval_test
 
     write(*,*) 'Brute force (optimised) xy'
 	startTime = omp_get_wtime()
-	bruteoptxy = EvalOpt(poly2)
+	do loop = 1, MAXITER
+		bruteoptxy = EvalOpt(poly2)
+	end do
 	endTime = omp_get_wtime()
 
 	timeDiff = endTime - startTime
@@ -84,7 +93,9 @@ program PolyEval_test
 	poly3%powers(3,:) = (/0,0,0,0,0,0/)
 
 	startTime = omp_get_wtime()
-	brutexyz = Eval(poly3)
+	do loop = 1, MAXITER
+		brutexyz = Eval(poly3)
+	end do
 	endTime = omp_get_wtime()
 
 	timeDiff = endTime - startTime
@@ -95,7 +106,9 @@ program PolyEval_test
     write(*,*) 'Brute force (optimised) xyz'
 
 	startTime = omp_get_wtime()
-	bruteoptxyz = EvalOpt(poly3)
+	do loop = 1, MAXITER
+		bruteoptxyz = EvalOpt(poly3)
+	end do
 	endTime = omp_get_wtime()
 
 	timeDiff = endTime - startTime
@@ -108,7 +121,9 @@ program PolyEval_test
 	write(*,*) 'Horners Form'
 
 	startTime = omp_get_wtime()
-	horner = EvalHorner(poly)
+	do loop = 1, MAXITER
+		horner = EvalHorner(poly)
+	end do
 	endTime = omp_get_wtime()
 
 	timeDiff = endTime - startTime
@@ -119,7 +134,9 @@ program PolyEval_test
 	write(*,*) 'Estrins Method'
 
 	startTime = omp_get_wtime()
-	estrin = EvalEstrin(poly)
+	do loop = 1, MAXITER
+		estrin = EvalEstrin(poly)
+	end do
 	endTime = omp_get_wtime()
 
 	timeDiff = endTime - startTime
