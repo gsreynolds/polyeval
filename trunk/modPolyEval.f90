@@ -41,36 +41,6 @@ module modPolyEval
 
     contains
 
-    double precision function CtoFtest(order, eps)
-    	integer, intent(IN) :: order !C int
-    	real(kind=prec), intent(IN) :: eps !C double
-
-    	write(*,*) 'Fortran function'
-
-    	write(*,*) 'Poly Order', order
-    	write(*,*) 'eps', eps
-    	
-    	CtoFtest = order*eps
-    	write(*,*) 'result = ', CtoFtest
-    end function CtoFtest
-
-	!Test C interface to Evalx, as opposed to passing a C struct to function 
-	!with Fortran derived datatype as argument.
-    double precision function CEvalx(n, f, x)
-    	integer, intent(IN) :: n
-    	real(kind=prec), dimension(n) :: f
-    	real (kind=prec), intent(IN) :: x
-    	type(polynomial) :: poly
-
-		poly%x = x
-		poly%n = n
-		allocate(poly%f(poly%n))
-		poly%f(:) = f(:)
-
-		CEvalx = Evalx(poly)
-
-    end function CEvalx
-
     !Function to evaluate a univariate polynomial by brute force
    	double precision function Evalx(poly)
    		type(polynomial), intent(IN) :: poly
