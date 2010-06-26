@@ -38,6 +38,19 @@ module modPolyEval
 
     contains
 
+    double precision function CtoFtest(order, eps)
+    	integer, intent(IN) :: order !C int
+    	real(kind=prec), intent(IN) :: eps !C double
+
+    	write(*,*) 'Fortran function'
+
+    	write(*,*) 'Poly Order', order
+    	write(*,*) 'eps', eps
+    	
+    	CtoFtest = order*eps
+    	write(*,*) 'result = ', CtoFtest
+    end function CtoFtest
+
     !Function to evaluate a univariate polynomial by brute force
    	double precision function Evalx(poly)
    		type(polynomial), intent(IN) :: poly
