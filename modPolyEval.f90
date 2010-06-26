@@ -4,12 +4,14 @@ module modPolyEval
 	integer, parameter :: prec = kind(1.0d0)
 
    	type polynomial
+   		sequence
    		integer :: n
    		real (kind=prec), allocatable, dimension(:) :: f !Coefficients of polynomial
 		real (kind=prec) :: x !Value of independent variable
 	end type
 
 	type polynomial2
+		sequence
    		integer :: n
    		real (kind=prec), allocatable, dimension(:) :: f !Coefficients of polynomial
 		real (kind=prec) :: x !Value of independent variable
@@ -18,6 +20,7 @@ module modPolyEval
 	end type
 
 	type polynomial3
+		sequence
    		integer :: n
    		real (kind=prec), allocatable, dimension(:) :: f !Coefficients of polynomial
 		real (kind=prec) :: x !Value of independent variable
@@ -50,6 +53,23 @@ module modPolyEval
     	CtoFtest = order*eps
     	write(*,*) 'result = ', CtoFtest
     end function CtoFtest
+
+	!Test C interface to Evalx, as opposed to passing a C struct to function 
+	!with Fortran derived datatype as argument.
+    double precision function CEvalx(n, f, x)
+    	integer, intent(IN) :: n
+    	real(kind=prec), dimension(n) :: f
+    	real (kind=prec), intent(IN) :: x
+    	type(polynomial) :: poly
+
+		poly%x = x
+		poly%n = n
+		allocate(poly%f(poly%n))
+		poly%f(:) = f(:)
+
+		CEvalx = Evalx(poly)
+
+    end function CEvalx
 
     !Function to evaluate a univariate polynomial by brute force
    	double precision function Evalx(poly)
