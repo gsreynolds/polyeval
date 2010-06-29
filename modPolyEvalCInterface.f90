@@ -92,4 +92,44 @@ module modPolyEvalCInterface
 
     end function CEvalxy
 
+    double precision function CEvalxyz(n, f, x, y, z, powers1, powers2, powers3, type)
+    	integer, intent(IN) :: n, type
+    	real(kind=prec), intent(IN), dimension(n) :: f
+    	real(kind=prec), intent(IN) :: x, y, z
+    	real(kind=prec), intent(IN), dimension(n-1) :: powers1, powers2, powers3
+    	type(polynomial3) :: poly
+
+		poly%x = x
+		poly%y = y
+		poly%z = z
+		poly%n = n
+		allocate(poly%f(poly%n))
+		poly%f(:) = f(:)
+		allocate(poly%powers(3,poly%n-1))
+		poly%powers(1,:) = powers1(:)
+		poly%powers(2,:) = powers2(:)
+		poly%powers(3,:) = powers3(:)
+
+		select case (type)
+
+			case (0)
+				write(*,*) 'Evalxyz'
+				CEvalxyz = Evalxyz(poly)
+
+			case (1)
+				write(*,*) 'EvalOptxyz'
+				CEvalxyz = EvalOptxyz(poly)
+
+!			case (2)
+!				write(*,*) 'EvalHorner'
+!				CEvalxyz = EvalHornerxyz(poly)
+
+			case default
+				write(*,*) 'Invalid type identifier, defaulting to Evalxy'
+				CEvalxyz = Evalxyz(poly)
+
+		end select
+
+    end function CEvalxyz
+
 end module modPolyEvalCInterface
