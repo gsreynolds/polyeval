@@ -2,7 +2,7 @@ MF=	Makefile
 
 FC=	pgf90
 
-FFLAGS= -O3 -mp -C
+FFLAGS= -fast -mp
 
 LFLAGS=
 
