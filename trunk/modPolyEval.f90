@@ -4,45 +4,33 @@ module modPolyEval
 	integer, parameter :: prec = kind(1.0d0)
 
    	type polynomial
-   		sequence
    		integer :: n
    		real (kind=prec), allocatable, dimension(:) :: f !Coefficients of polynomial
 		real (kind=prec) :: x !Value of independent variable
 	end type
 
-	type polynomial2
-		sequence
-   		integer :: n
-   		real (kind=prec), allocatable, dimension(:) :: f !Coefficients of polynomial
-		real (kind=prec) :: x !Value of independent variable
-		real (kind=prec) :: y !Value of independent variable
-		real (kind=prec), allocatable, dimension(:,:) :: powers
-	end type
-
-	type polynomial3
-		sequence
-   		integer :: n
-   		real (kind=prec), allocatable, dimension(:) :: f !Coefficients of polynomial
-		real (kind=prec) :: x !Value of independent variable
-		real (kind=prec) :: y !Value of independent variable
-		real (kind=prec) :: z !Value of independent variable
+	type polynomial_multi
+		integer :: n
+		integer :: m
+		real (kind=prec), allocatable, dimension(:) :: f !Coefficients of polynomial
+		real (kind=prec), allocatable, dimension(:) :: vars !Independent variables
 		real (kind=prec), allocatable, dimension(:,:) :: powers
 	end type
 
 	!Evaluate by brute force
 	interface Eval
-		module procedure Evalx, Evalxy, Evalxyz
+		module procedure Eval, Eval_multi
 	end interface
 
 	!Evaluate by optimised brute force method
 	interface EvalOpt
-		module procedure EvalOptx, EvalOptxy, EvalOptxyz
+		module procedure EvalOpt, EvalOpt_multi
 	end interface
 
     contains
 
     !Function to evaluate a univariate polynomial by brute force
-   	double precision function Evalx(poly)
+   	double precision function Eval(poly)
    		type(polynomial), intent(IN) :: poly
    		integer :: i
    		real (kind=prec), dimension(poly%n) :: monomial
@@ -53,12 +41,12 @@ module modPolyEval
 
    		monomial(poly%n) = poly%f(poly%n)
 
-   		Evalx = sum(monomial(:))
+   		Eval = sum(monomial(:))
 
-   	end function Evalx
+   	end function Eval
 
    	 !Function to evaluate a univariate polynomial by brute force, with optimisations
-   	double precision function EvalOptx(poly)
+   	double precision function EvalOpt(poly)
    		type(polynomial), intent(IN) :: poly
    		integer :: i, j, numSteps
    		real (kind=prec), dimension(poly%n) :: monomial
@@ -79,127 +67,59 @@ module modPolyEval
 
    		monomial(poly%n) = poly%f(poly%n)
 
-   		EvalOptx = sum(monomial(:))
+   		EvalOpt = sum(monomial(:))
 
-   	end function EvalOptx
+   	end function EvalOpt
 
-   	 !Function to evaluate a bivariate polynomial by brute force
-   	double precision function Evalxy(poly)
-   		type(polynomial2), intent(IN) :: poly
-   		integer :: i
+	!Function to evaluate a multivariate polynomial by brute force
+   	double precision function Eval_multi(poly)
+   		type(polynomial_multi), intent(IN) :: poly
+   		integer :: i, j
    		real (kind=prec), dimension(poly%n) :: monomial
 
    		do i = 1, poly%n-1
-			monomial(i) = poly%f(i)*poly%x**poly%powers(1,i)*poly%y**poly%powers(2,i)
+			monomial(i) = poly%f(i)
+			do j = 1, poly%m
+				monomial(i) = monomial(i)*poly%vars(j)**poly%powers(j,i)
+			end do
    		end do
 
    		monomial(poly%n) = poly%f(poly%n)
 
-   		Evalxy = sum(monomial(:))
+   		Eval_multi = sum(monomial(:))
 
-   	end function Evalxy
+   	end function Eval_multi
 
-   	!Function to evaluate a bivariate polynomial by brute force, with optimisations
-   	double precision function EvalOptxy(poly)
-   		type(polynomial2), intent(IN) :: poly
-   		integer :: i, j, numSteps
+	!Function to evaluate a multivariate polynomial by brute force, with optimisations
+   	double precision function EvalOpt_multi(poly)
+   		type(polynomial_multi), intent(IN) :: poly
+   		integer :: i, j, k, numSteps
    		real (kind=prec), dimension(poly%n) :: monomial
-   		real (kind=prec) :: x2, y2
+   		real (kind=prec), dimension(poly%m) :: vars2 !variables, squared
 
-   		x2 = poly%x*poly%x
-   		y2 = poly%y*poly%y
+   		do i = 1, poly%m
+   			vars2(i) = poly%vars(i)*poly%vars(i)
+   		end do
 
    		do i = 1, poly%n-1
 			monomial(i) = poly%f(i)
 
-			!x powers
-			numSteps = (poly%powers(1,i))/2
-			do j = 1, numSteps
-				monomial(i) = monomial(i) * x2
-			end do
-			if (mod(poly%powers(1,i), 2.0d0) .ne. 0) then
-				monomial(i) = monomial(i) * poly%x
-   			end if
-
-   			!y powers
-			numSteps = (poly%powers(2,i))/2
-			do j = 1, numSteps
-				monomial(i) = monomial(i) * y2
-			end do
-			if (mod(poly%powers(2,i), 2.0d0) .ne. 0) then
-				monomial(i) = monomial(i) * poly%y
-   			end if
+			do j = 1, poly%m
+				numSteps = (poly%powers(j,i))/2
+				do k = 1, numSteps
+					monomial(i) = monomial(i) * vars2(j)
+				end do
+				if (mod(poly%powers(j,i), 2.0d0) .ne. 0) then
+					monomial(i) = monomial(i) * poly%vars(j)
+	   			end if
+   			end do
    		end do
 
    		monomial(poly%n) = poly%f(poly%n)
 
-   		EvalOptxy = sum(monomial(:))
+   		EvalOpt_multi = sum(monomial(:))
 
-   	end function EvalOptxy
-
-   	 !Function to evaluate a trivariate polynomial by brute force
-   	double precision function Evalxyz(poly)
-   		type(polynomial3), intent(IN) :: poly
-   		integer :: i
-   		real (kind=prec), dimension(poly%n) :: monomial
-
-   		do i = 1, poly%n-1
-			monomial(i) = poly%f(i)*poly%x**poly%powers(1,i)*poly%y**poly%powers(2,i)*poly%z**poly%powers(3,i)
-   		end do
-
-   		monomial(poly%n) = poly%f(poly%n)
-
-   		Evalxyz = sum(monomial(:))
-
-   	end function Evalxyz
-
-   	!Function to evaluate a trivariate polynomial by brute force, with optimisations
-   	double precision function EvalOptxyz(poly)
-   		type(polynomial3), intent(IN) :: poly
-   		integer :: i, j, numSteps
-   		real (kind=prec), dimension(poly%n) :: monomial
-   		real (kind=prec) :: x2, y2, z2
-
-   		x2 = poly%x*poly%x
-   		y2 = poly%y*poly%y
-   		z2 = poly%z*poly%z
-
-   		do i = 1, poly%n-1
-			monomial(i) = poly%f(i)
-
-			!x powers
-			numSteps = (poly%powers(1,i))/2
-			do j = 1, numSteps
-				monomial(i) = monomial(i) * x2
-			end do
-			if (mod(poly%powers(1,i), 2.0d0) .ne. 0) then
-				monomial(i) = monomial(i) * poly%x
-   			end if
-
-   			!y powers
-			numSteps = (poly%powers(2,i))/2
-			do j = 1, numSteps
-				monomial(i) = monomial(i) * y2
-			end do
-			if (mod(poly%powers(2,i), 2.0d0) .ne. 0) then
-				monomial(i) = monomial(i) * poly%y
-   			end if
-
-   			!z powers
-			numSteps = (poly%powers(3,i))/2
-			do j = 1, numSteps
-				monomial(i) = monomial(i) * z2
-			end do
-			if (mod(poly%powers(3,i), 2.0d0) .ne. 0) then
-				monomial(i) = monomial(i) * poly%z
-   			end if
-   		end do
-
-   		monomial(poly%n) = poly%f(poly%n)
-
-   		EvalOptxyz = sum(monomial(:))
-
-   	end function EvalOptxyz
+   	end function EvalOpt_multi
 
 	!Function to evaluate a polynomial using Horner's form
     double precision function EvalHorner(poly)
@@ -226,13 +146,9 @@ module modPolyEval
 		integer :: i,j,numsteps, shift, nearestpoweroftwo, npow2
 
 		nearestpoweroftwo = 2**ceiling(log(real(poly%n))/log(2.0d0))
-		!write(*,*) 'nearestpoweroftwo', nearestpoweroftwo
 		if (mod(poly%n, nearestpoweroftwo) .ne. 0) then
-			!write(*,*) 'ne 0'
 			shift = nearestpoweroftwo-mod(poly%n, nearestpoweroftwo)
-			!write(*,*) 'shift', shift
 			npow2 = poly%n + shift
-			!write(*,*) 'npow2', npow2
 		else
 			shift = 0
 			npow2 = poly%n
@@ -244,12 +160,9 @@ module modPolyEval
 		coeff(:,:) = 0
 
 		numsteps = log(real(npow2))/log(2.0d0)
-		!write(*,*) 'numsteps', numsteps
 		allocate(powers(numsteps))
 
 		func(1+shift:npow2) = poly%f(:)
-		!write(*,*) 'func'
-		!write(*,*) func
 
 		!Evaluate using Estrin's Method
 		powers(1) = poly%x
@@ -267,9 +180,6 @@ module modPolyEval
 				coeff(j, i) = coeff(2*j-1, i-1)*powers(i)+coeff(2*j, i-1)
 			end do
 			!$omp end parallel do
-
-			!write(*,*)
-			!write(*,*) coeff(:, i)
 
 		end do
 
