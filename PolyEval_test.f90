@@ -13,93 +13,112 @@ program PolyEval_test
 	type(polynomial) :: poly
 	type(polynomial_multi) :: poly_multi
 
+	!MPI variables
+	integer, dimension(MPI_STATUS_SIZE) :: status
+	integer :: ierr, comm, rank, size
+
+	!Initialise MPI
+	comm = MPI_COMM_WORLD
+
+	call MPI_Init(ierr)
+
+    call MPI_Comm_Rank(comm, rank, ierr)
+
+    call MPI_Comm_Size(comm, size, ierr)
+
 	poly%x = 2.0
 	poly%n = 7
 	allocate(poly%f(poly%n))
 	poly%f = (/a,a,a,a,a,a,a/)
 
-	write(*,*) 'Brute force x'
+	! Only executing Brute force and Horners form on rank 0
 
-	startTime = MPI_Wtime()
-	do loop = 1, MAXITER
-		brute = Eval(poly)
-	end do
-	endTime = MPI_Wtime()
+	if(rank==0) then
 
-	timeDiff = endTime - startTime
-    write(*,*) 'result =', brute
-    write(*,*) 'Completed in', timeDiff
-    write(*,*)
+		write(*,*) 'Brute force x'
 
-    write(*,*) 'Brute force (optimised) x'
+		startTime = MPI_Wtime()
+		do loop = 1, MAXITER
+			brute = Eval(poly)
+		end do
+		endTime = MPI_Wtime()
 
-	startTime = MPI_Wtime()
-	do loop = 1, MAXITER
-		bruteopt = EvalOpt(poly)
-	end do
-	endTime = MPI_Wtime()
+		timeDiff = endTime - startTime
+	    write(*,*) 'result =', brute
+	    write(*,*) 'Completed in', timeDiff
+	    write(*,*)
 
-	timeDiff = endTime - startTime
-    write(*,*) 'result =', bruteopt
-    write(*,*) 'Completed in', timeDiff
-    write(*,*)
+	    write(*,*) 'Brute force (optimised) x'
 
-    write(*,*) 'Brute force multi'
+		startTime = MPI_Wtime()
+		do loop = 1, MAXITER
+			bruteopt = EvalOpt(poly)
+		end do
+		endTime = MPI_Wtime()
 
-    poly_multi%m = 2
-	allocate(poly_multi%vars(poly_multi%m))
-    poly_multi%vars(1)=2.0
-    poly_multi%vars(2)=3.0
-    poly_multi%n=poly%n
-    allocate(poly_multi%f(poly_multi%n))
-    allocate(poly_multi%powers(poly_multi%m,poly_multi%n-1))
-    poly_multi%f = poly%f
-	poly_multi%powers(1,:) = (/2,2,1,1,1,0/)
-	poly_multi%powers(2,:) = (/2,1,2,1,0,1/)
+		timeDiff = endTime - startTime
+	    write(*,*) 'result =', bruteopt
+	    write(*,*) 'Completed in', timeDiff
+	    write(*,*)
 
-	startTime = MPI_Wtime()
-	do loop = 1, MAXITER
-		brute_multi = Eval_multi(poly_multi)
-	end do
-	endTime = MPI_Wtime()
+	    write(*,*) 'Brute force multi'
 
-	timeDiff = endTime - startTime
-    write(*,*) 'result =', brute_multi
-    write(*,*) 'Completed in', timeDiff
-    write(*,*)
+	    poly_multi%m = 2
+		allocate(poly_multi%vars(poly_multi%m))
+	    poly_multi%vars(1)=2.0
+	    poly_multi%vars(2)=3.0
+	    poly_multi%n=poly%n
+	    allocate(poly_multi%f(poly_multi%n))
+	    allocate(poly_multi%powers(poly_multi%m,poly_multi%n-1))
+	    poly_multi%f = poly%f
+		poly_multi%powers(1,:) = (/2,2,1,1,1,0/)
+		poly_multi%powers(2,:) = (/2,1,2,1,0,1/)
 
-    write(*,*) 'Brute force multi (optimised)'
-	startTime = MPI_Wtime()
-	do loop = 1, MAXITER
-		bruteopt_multi = EvalOpt_multi(poly_multi)
-	end do
-	endTime = MPI_Wtime()
+		startTime = MPI_Wtime()
+		do loop = 1, MAXITER
+			brute_multi = Eval_multi(poly_multi)
+		end do
+		endTime = MPI_Wtime()
 
-	timeDiff = endTime - startTime
-    write(*,*) 'result =', bruteopt_multi
-    write(*,*) 'Completed in', timeDiff
-    write(*,*)
+		timeDiff = endTime - startTime
+	    write(*,*) 'result =', brute_multi
+	    write(*,*) 'Completed in', timeDiff
+	    write(*,*)
 
-	write(*,*) '==============='
-	write(*,*)
-	write(*,*) 'Horners Form'
+	    write(*,*) 'Brute force multi (optimised)'
+		startTime = MPI_Wtime()
+		do loop = 1, MAXITER
+			bruteopt_multi = EvalOpt_multi(poly_multi)
+		end do
+		endTime = MPI_Wtime()
 
-	startTime = MPI_Wtime()
-	do loop = 1, MAXITER
-		horner = EvalHorner(poly)
-	end do
-	endTime = MPI_Wtime()
+		timeDiff = endTime - startTime
+	    write(*,*) 'result =', bruteopt_multi
+	    write(*,*) 'Completed in', timeDiff
+	    write(*,*)
 
-	timeDiff = endTime - startTime
-    write(*,*) 'result =', horner
-    write(*,*) 'Completed in', timeDiff
+		write(*,*) '==============='
+		write(*,*)
+		write(*,*) 'Horners Form'
+
+		startTime = MPI_Wtime()
+		do loop = 1, MAXITER
+			horner = EvalHorner(poly)
+		end do
+		endTime = MPI_Wtime()
+
+		timeDiff = endTime - startTime
+	    write(*,*) 'result =', horner
+	    write(*,*) 'Completed in', timeDiff
+
+    end if
 
 	write(*,*)
 	write(*,*) 'Estrins Method'
 
 	startTime = MPI_Wtime()
 	do loop = 1, MAXITER
-		estrin = EvalEstrin(poly)
+		estrin = EvalEstrin(poly, rank)
 	end do
 	endTime = MPI_Wtime()
 
@@ -107,8 +126,10 @@ program PolyEval_test
     write(*,*) 'result =', estrin
 	write(*,*) 'Completed in', timeDiff
 
-	write(*,*)
-	write(*,*) 'Horner - Estrin'
-	write(*,*) 'diff   =', horner-estrin
+!	write(*,*)
+!	write(*,*) 'Horner - Estrin'
+!	write(*,*) 'diff   =', horner-estrin
+
+	call MPI_Finalize(ierr)
 
 end program PolyEval_test
