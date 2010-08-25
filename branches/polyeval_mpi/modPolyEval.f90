@@ -137,16 +137,29 @@ module modPolyEval
 	end function EvalHorner
 
 	!Function to evaluate a polynomial using Estrin's method
-	double precision function EvalEstrin(poly, rank)
+	double precision function EvalEstrin(poly, rank, size, comm)
 		use mpi
 
 		type(polynomial), intent(IN) :: poly
-		integer, intent(IN) :: rank
+		integer, intent(IN) :: rank, size, comm
 		real (kind=prec), allocatable, dimension(:) :: func, powers
 		real (kind=prec), allocatable, dimension(:,:) :: coeff
-		integer :: i,j,numsteps, shift, nearestpoweroftwo, npow2
+		integer :: i,j,numsteps, shift, nearestpoweroftwo, npow2, ll, ul, source, sourcell, sourceul, sizeofchunk
+
+		!MPI Variables
+		integer, dimension(MPI_STATUS_SIZE) :: status
+		integer :: ierr
 
 		nearestpoweroftwo = 2**ceiling(log(real(poly%n))/log(2.0d0))
+
+		if (size > nearestpoweroftwo) then
+			if (rank==0) then
+	    		write(*,*) 'Number of processes is greater than the width of the array.'
+	    		write(*,*) 'Num procs: ', size, ', numcoeffs: ', poly%n, ' nearestpoweroftwo: ', nearestpoweroftwo
+	    	end if
+	    	call MPI_Finalize(ierr)
+	    	stop
+	    end if
 		if (mod(poly%n, nearestpoweroftwo) .ne. 0) then
 			shift = nearestpoweroftwo-mod(poly%n, nearestpoweroftwo)
 			npow2 = poly%n + shift
@@ -155,13 +168,12 @@ module modPolyEval
 			npow2 = poly%n
 		end if
 
-
 		allocate(func(npow2))
 		func(:) = 0
-		allocate(coeff(npow2, 0:npow2))
-		coeff(:,:) = 0
 
 		numsteps = log(real(npow2))/log(2.0d0)
+		allocate(coeff(npow2, 0:numsteps))
+		coeff(:,:) = 0
 		allocate(powers(numsteps))
 
 		func(1+shift:npow2) = poly%f(:)
@@ -174,13 +186,80 @@ module modPolyEval
 
 		coeff(:, 0) = func
 
+		write(*,*) 'rank ', rank
+		write(*,*) 'of ', size
+		write(*,*) 'npow2', npow2
+
 		do i = 1, numsteps
 
-			do j = 1, npow2/(2**i)
+			write(*,*) 'i', i
+
+			sizeofchunk = npow2/size
+
+			write(*,*) 'sizeofchunk', sizeofchunk
+
+			if (i .ne. numsteps) then
+				ll = rank*sizeofchunk+1
+				ul = ll+sizeofchunk-1
+			else
+				ll=1
+				ul=1
+			end if
+
+			write(*,*) 'll', ll, 'ul', ul
+
+			do j = ll, ul
 				coeff(j, i) = coeff(2*j-1, i-1)*powers(i)+coeff(2*j, i-1)
 			end do
 
+			write(*,*)
+			write(*,*) 'rank ', rank, ' data'
+			write(*,*) coeff(:, i)
+
+
+			if (i .ne. numsteps) then
+
+				if (rank .ne. 0) then
+
+					write(*,*) 'rank', rank, 'sending to root'
+					write(*,*) 'data: ', coeff(ll:ul, i)
+					call MPI_Send(coeff(ll:ul, i), ul-ll+1, MPI_DOUBLE_PRECISION, 0, 0, comm, ierr)
+
+				else
+					do source = 1, size-1
+						write(*,*) 'root receiving from rank ', source
+						sourcell = source*sizeofchunk+1
+						sourceul = sourcell+sizeofchunk-1
+						write(*,*) 'root inserting data from rank ', source, ' into coeff(', sourcell,':',sourceul, ',', i, ')'
+						call MPI_Recv(coeff(sourcell:sourceul, i), ul-ll+1, MPI_DOUBLE_PRECISION, source, 0, comm, status, ierr)
+					end do
+
+					write(*,*)
+					write(*,*) 'updated data on rank 0'
+					write(*,*) coeff(:, i)
+				end if
+
+				!Broadcasting updated data back to processes other than root
+				call MPI_Bcast(coeff(:, i), npow2, MPI_DOUBLE_PRECISION, 0, comm, ierr)
+				if (rank .ne. 0) then
+					write(*,*) 'rank ', rank, ' recieved updated coeff array slice'
+				end if
+
+			end if
+
+			write(*,*)
+
 		end do
+
+		if (rank == 0) then
+
+			do i = 0, numsteps
+
+				write(*,*) coeff(:, i)
+
+			end do
+
+		end if
 
 		EvalEstrin = coeff(1, numsteps)
 
