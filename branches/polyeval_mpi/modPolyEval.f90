@@ -224,7 +224,7 @@ module modPolyEval
 
 !					write(*,*) 'rank', rank, 'sending to root'
 !					write(*,*) 'data: ', coeff(ll:ul, i)
-					call MPI_Send(coeff(ll:ul, i), ul-ll+1, MPI_DOUBLE_PRECISION, 0, 0, comm, ierr)
+					call MPI_SSend(coeff(ll:ul, i), ul-ll+1, MPI_DOUBLE_PRECISION, 0, 0, comm, ierr)
 
 				else
 					do source = 1, size-1
