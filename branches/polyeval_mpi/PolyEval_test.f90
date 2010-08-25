@@ -123,17 +123,20 @@ program PolyEval_test
 
     end if
 
-	write(*,*)
-	write(*,*) 'Estrins Method'
+	if (rank == 0) then
+		write(*,*)
+		write(*,*) 'Estrins Method'
+		startTime = MPI_Wtime()
+	end if
 
-	startTime = MPI_Wtime()
 	do loop = 1, MAXITER
 		estrin = EvalEstrin(poly, rank, size, comm)
 	end do
-	endTime = MPI_Wtime()
 
-	timeDiff = endTime - startTime
 	if (rank == 0) then
+		endTime = MPI_Wtime()
+		timeDiff = endTime - startTime
+
 	    write(*,*) 'result =', estrin
 		write(*,*) 'Completed in', timeDiff
 	end if
