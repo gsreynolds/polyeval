@@ -1,5 +1,5 @@
 program PolyEval_test
-	use omp_lib
+	use mpi
 	use modPolyEval
 	implicit none
 
@@ -20,11 +20,11 @@ program PolyEval_test
 
 	write(*,*) 'Brute force x'
 
-	startTime = omp_get_wtime()
+	startTime = MPI_Wtime()
 	do loop = 1, MAXITER
 		brute = Eval(poly)
 	end do
-	endTime = omp_get_wtime()
+	endTime = MPI_Wtime()
 
 	timeDiff = endTime - startTime
     write(*,*) 'result =', brute
@@ -33,11 +33,11 @@ program PolyEval_test
 
     write(*,*) 'Brute force (optimised) x'
 
-	startTime = omp_get_wtime()
+	startTime = MPI_Wtime()
 	do loop = 1, MAXITER
 		bruteopt = EvalOpt(poly)
 	end do
-	endTime = omp_get_wtime()
+	endTime = MPI_Wtime()
 
 	timeDiff = endTime - startTime
     write(*,*) 'result =', bruteopt
@@ -57,11 +57,11 @@ program PolyEval_test
 	poly_multi%powers(1,:) = (/2,2,1,1,1,0/)
 	poly_multi%powers(2,:) = (/2,1,2,1,0,1/)
 
-	startTime = omp_get_wtime()
+	startTime = MPI_Wtime()
 	do loop = 1, MAXITER
 		brute_multi = Eval_multi(poly_multi)
 	end do
-	endTime = omp_get_wtime()
+	endTime = MPI_Wtime()
 
 	timeDiff = endTime - startTime
     write(*,*) 'result =', brute_multi
@@ -69,11 +69,11 @@ program PolyEval_test
     write(*,*)
 
     write(*,*) 'Brute force multi (optimised)'
-	startTime = omp_get_wtime()
+	startTime = MPI_Wtime()
 	do loop = 1, MAXITER
 		bruteopt_multi = EvalOpt_multi(poly_multi)
 	end do
-	endTime = omp_get_wtime()
+	endTime = MPI_Wtime()
 
 	timeDiff = endTime - startTime
     write(*,*) 'result =', bruteopt_multi
@@ -84,11 +84,11 @@ program PolyEval_test
 	write(*,*)
 	write(*,*) 'Horners Form'
 
-	startTime = omp_get_wtime()
+	startTime = MPI_Wtime()
 	do loop = 1, MAXITER
 		horner = EvalHorner(poly)
 	end do
-	endTime = omp_get_wtime()
+	endTime = MPI_Wtime()
 
 	timeDiff = endTime - startTime
     write(*,*) 'result =', horner
@@ -97,11 +97,11 @@ program PolyEval_test
 	write(*,*)
 	write(*,*) 'Estrins Method'
 
-	startTime = omp_get_wtime()
+	startTime = MPI_Wtime()
 	do loop = 1, MAXITER
 		estrin = EvalEstrin(poly)
 	end do
-	endTime = omp_get_wtime()
+	endTime = MPI_Wtime()
 
 	timeDiff = endTime - startTime
     write(*,*) 'result =', estrin
