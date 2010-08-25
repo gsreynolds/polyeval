@@ -14,7 +14,6 @@ program PolyEval_test
 	type(polynomial_multi) :: poly_multi
 
 	!MPI variables
-	integer, dimension(MPI_STATUS_SIZE) :: status
 	integer :: ierr, comm, rank, size
 
 	!Initialise MPI
@@ -25,6 +24,17 @@ program PolyEval_test
     call MPI_Comm_Rank(comm, rank, ierr)
 
     call MPI_Comm_Size(comm, size, ierr)
+
+	!Number of processes must either be 1 or a number divisible by two
+	if (size .ne. 1) then
+	    if (mod(size, 2) .ne. 0) then
+	    	if (rank==0) then
+	    		write(*,*) 'Number of processes must be divisible by two'
+	    	end if
+	    	call MPI_Finalize(ierr)
+	    	stop
+	    end if
+    end if
 
 	poly%x = 2.0
 	poly%n = 7
@@ -118,13 +128,15 @@ program PolyEval_test
 
 	startTime = MPI_Wtime()
 	do loop = 1, MAXITER
-		estrin = EvalEstrin(poly, rank)
+		estrin = EvalEstrin(poly, rank, size, comm)
 	end do
 	endTime = MPI_Wtime()
 
 	timeDiff = endTime - startTime
-    write(*,*) 'result =', estrin
-	write(*,*) 'Completed in', timeDiff
+	if (rank == 0) then
+	    write(*,*) 'result =', estrin
+		write(*,*) 'Completed in', timeDiff
+	end if
 
 !	write(*,*)
 !	write(*,*) 'Horner - Estrin'
