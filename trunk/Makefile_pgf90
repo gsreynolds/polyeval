@@ -1,8 +1,8 @@
 MF=	Makefile
 
-FC=	mpif90
+FC=	pgf90
 
-FFLAGS= -fast
+FFLAGS= -fast -mp
 
 LFLAGS=
 
