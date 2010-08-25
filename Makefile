@@ -1,8 +1,8 @@
 MF=	Makefile
 
-FC=	mpif90
+FC=	gfortran
 
-FFLAGS= -O3 
+FFLAGS= -O3 -fopenmp
 
 LFLAGS=
 
