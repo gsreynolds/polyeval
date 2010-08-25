@@ -137,10 +137,11 @@ module modPolyEval
 	end function EvalHorner
 
 	!Function to evaluate a polynomial using Estrin's method
-	double precision function EvalEstrin(poly)
-		use omp_lib
+	double precision function EvalEstrin(poly, rank)
+		use mpi
 
 		type(polynomial), intent(IN) :: poly
+		integer, intent(IN) :: rank
 		real (kind=prec), allocatable, dimension(:) :: func, powers
 		real (kind=prec), allocatable, dimension(:,:) :: coeff
 		integer :: i,j,numsteps, shift, nearestpoweroftwo, npow2
@@ -153,6 +154,7 @@ module modPolyEval
 			shift = 0
 			npow2 = poly%n
 		end if
+
 
 		allocate(func(npow2))
 		func(:) = 0
@@ -174,17 +176,16 @@ module modPolyEval
 
 		do i = 1, numsteps
 
-			!$omp parallel do default(none) shared(coeff, powers, npow2, i) private(j)
 			do j = 1, npow2/(2**i)
-				!write(*,*) 'Thread', OMP_GET_THREAD_NUM(), 'i', i, 'j', j
 				coeff(j, i) = coeff(2*j-1, i-1)*powers(i)+coeff(2*j, i-1)
 			end do
-			!$omp end parallel do
 
 		end do
 
 		EvalEstrin = coeff(1, numsteps)
 
 	end function EvalEstrin
+
+
 
 end module modPolyEval
