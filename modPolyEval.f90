@@ -160,6 +160,7 @@ module modPolyEval
 	    	call MPI_Finalize(ierr)
 	    	stop
 	    end if
+
 		if (mod(poly%n, nearestpoweroftwo) .ne. 0) then
 			shift = nearestpoweroftwo-mod(poly%n, nearestpoweroftwo)
 			npow2 = poly%n + shift
@@ -186,17 +187,17 @@ module modPolyEval
 
 		coeff(:, 0) = func
 
-		write(*,*) 'rank ', rank
-		write(*,*) 'of ', size
-		write(*,*) 'npow2', npow2
+!		write(*,*) 'rank ', rank
+!		write(*,*) 'of ', size
+!		write(*,*) 'npow2', npow2
 
 		do i = 1, numsteps
 
-			write(*,*) 'i', i
+!			write(*,*) 'i', i
 
 			sizeofchunk = npow2/size
 
-			write(*,*) 'sizeofchunk', sizeofchunk
+!			write(*,*) 'sizeofchunk', sizeofchunk
 
 			if (i .ne. numsteps) then
 				ll = rank*sizeofchunk+1
@@ -206,65 +207,63 @@ module modPolyEval
 				ul=1
 			end if
 
-			write(*,*) 'll', ll, 'ul', ul
+!			write(*,*) 'll', ll, 'ul', ul
 
 			do j = ll, ul
 				coeff(j, i) = coeff(2*j-1, i-1)*powers(i)+coeff(2*j, i-1)
 			end do
 
-			write(*,*)
-			write(*,*) 'rank ', rank, ' data'
-			write(*,*) coeff(:, i)
+!			write(*,*)
+!			write(*,*) 'rank ', rank, ' data'
+!			write(*,*) coeff(:, i)
 
 
 			if (i .ne. numsteps) then
 
 				if (rank .ne. 0) then
 
-					write(*,*) 'rank', rank, 'sending to root'
-					write(*,*) 'data: ', coeff(ll:ul, i)
+!					write(*,*) 'rank', rank, 'sending to root'
+!					write(*,*) 'data: ', coeff(ll:ul, i)
 					call MPI_Send(coeff(ll:ul, i), ul-ll+1, MPI_DOUBLE_PRECISION, 0, 0, comm, ierr)
 
 				else
 					do source = 1, size-1
-						write(*,*) 'root receiving from rank ', source
+!						write(*,*) 'root receiving from rank ', source
 						sourcell = source*sizeofchunk+1
 						sourceul = sourcell+sizeofchunk-1
-						write(*,*) 'root inserting data from rank ', source, ' into coeff(', sourcell,':',sourceul, ',', i, ')'
+!						write(*,*) 'root inserting data from rank ', source, ' into coeff(', sourcell,':',sourceul, ',', i, ')'
 						call MPI_Recv(coeff(sourcell:sourceul, i), ul-ll+1, MPI_DOUBLE_PRECISION, source, 0, comm, status, ierr)
 					end do
 
-					write(*,*)
-					write(*,*) 'updated data on rank 0'
-					write(*,*) coeff(:, i)
+!					write(*,*)
+!					write(*,*) 'updated data on rank 0'
+!					write(*,*) coeff(:, i)
 				end if
 
 				!Broadcasting updated data back to processes other than root
 				call MPI_Bcast(coeff(:, i), npow2, MPI_DOUBLE_PRECISION, 0, comm, ierr)
-				if (rank .ne. 0) then
-					write(*,*) 'rank ', rank, ' recieved updated coeff array slice'
-				end if
+!				if (rank .ne. 0) then
+!					write(*,*) 'rank ', rank, ' recieved updated coeff array slice'
+!				end if
 
 			end if
 
-			write(*,*)
+!			write(*,*)
 
 		end do
 
-		if (rank == 0) then
-
-			do i = 0, numsteps
-
-				write(*,*) coeff(:, i)
-
-			end do
-
-		end if
+!		if (rank == 0) then
+!
+!			do i = 0, numsteps
+!
+!				write(*,*) coeff(:, i)
+!
+!			end do
+!
+!		end if
 
 		EvalEstrin = coeff(1, numsteps)
 
 	end function EvalEstrin
-
-
 
 end module modPolyEval
