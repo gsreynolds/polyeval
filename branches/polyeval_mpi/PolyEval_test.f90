@@ -3,7 +3,7 @@ program PolyEval_test
 	use modPolyEval
 	implicit none
 
-	integer, parameter :: MAXITER = 1000000!000
+	integer, parameter :: MAXITER = 1!000000!000
 	real (kind=prec), parameter :: a = 3.068474, b=0.0d0, c=20.857847, d=0.0d0, e=0.757463, f=0.0d0, g=8.673527
 	real (kind=prec), parameter :: h=765.638467, i=0.0d0, j=-20.889708, k=67.786429, l=-0.754380, m= 1120.000000
 	real (kind=prec) :: x, estrin, horner, brute, brute_multi, bruteopt, bruteopt_multi
@@ -25,11 +25,11 @@ program PolyEval_test
 
     call MPI_Comm_Size(comm, size, ierr)
 
-	!Number of processes must either be 1 or a number divisible by two
+	!Number of processes must either be 1 or a power of two
 	if (size .ne. 1) then
-	    if (mod(size, 2) .ne. 0) then
+	    if ((iand(size, (size - 1))) .ne. 0) then
 	    	if (rank==0) then
-	    		write(*,*) 'Number of processes must be divisible by two'
+	    		write(*,*) 'Number of processes must be a power of two'
 	    	end if
 	    	call MPI_Finalize(ierr)
 	    	stop
