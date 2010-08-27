@@ -151,6 +151,7 @@ module modPolyEval
 		integer, dimension(MPI_STATUS_SIZE) :: status
 		integer :: ierr
 
+		!Round up the number of coefficients to the nearest power of two
 		nearestpoweroftwo = 2**ceiling(log(real(poly%n))/log(2.0d0))
 
 		if (size > nearestpoweroftwo) then
@@ -188,100 +189,66 @@ module modPolyEval
 
 		coeff(:, 0) = func
 
-!		write(*,*) 'rank ', rank
-!		write(*,*) 'of ', size
-!		write(*,*) 'npow2', npow2
-
 		effectivesize = size
 
 		do i = 1, numsteps
-
-!			write(*,*) 'i', i
+			!Work out the number of elements in the current array row that are "active"/in use.
+			!i.e. for a 512 coefficient poly, at step 1 there are 512 coefficients but at step two there are only 256 coefficients
+			!therefore, elements > 256 are unused i.e. zero
 			arraywidthinuse = npow2/(2**(i-1))
 
 			if (arraywidthinuse < effectivesize) then
-!				write(*,*) 'arraywidthinuse < size'
+				!If the array width in use at this step is greater than the active/effective number of MPI processes at this step
+				!then reduce the effective number of MPI processes.
+				!i.e. if at this step there is only 8 coefficients (i.e. array width of 8) and there are 16 MPI processes, then r
 				effectivesize = effectivesize/2
-!				write(*,*) 'new effective size', effectivesize
 			end if
 
+			!Size of chunk is the portion of the array row at this step assigned to each MPI process 
 			sizeofchunk = arraywidthinuse/effectivesize
-
-!			write(*,*) 'rank', rank, 'arraywidthinuse', arraywidthinuse, 'sizeofchunk', sizeofchunk
 
 			if (i .ne. numsteps) then
 				ll = rank*sizeofchunk+1
 				ul = ll+sizeofchunk-1
-!				write(*,*) 'rank', rank, 'i', i, 'll', ll, 'ul', ul
 			else
+				!If this is the last step, then lower limit and upper limit are 1, no matter what the rank
 				ll=1
 				ul=1
 			end if
 
-!			write(*,*) '2 rank', rank, 'i', i, 'll', ll, 'ul', ul
-
 			if (rank <= effectivesize - 1) then
-!				write(*,*) 'i', i, 'rank', rank, 'do calc', ' effectivesize', effectivesize
-
+				!If the rank is less than or equal to the active/effective number of MPI processes at this step then do the calc
 				do j = ll, ul
 					coeff(j, i) = coeff(2*j-1, i-1)*powers(i)+coeff(2*j, i-1)
 				end do
 			end if
-!			call FLUSH(6)
-
-!			write(*,*)
-!			write(*,*) 'rank ', rank, ' data'
-!			write(*,*) coeff(:, i)
-
 
 			if (i .ne. numsteps) then
 
 				if (rank .ne. 0) then
 					if (rank <= effectivesize - 1) then
-						!Don't send data outside of the width of the array in use at this step
-!						write(*,*) 'rank', rank, 'sending to root'
-!						write(*,*) 'data: ', coeff(ll:ul, i)
+						!Don't send data outside of the width of the array in use at this step.
+						!Data outside the effective width of the array in use at this step will only consist of zeros.
+
 						call MPI_SSend(coeff(ll:ul, i), ul-ll+1, MPI_DOUBLE_PRECISION, 0, 0, comm, ierr)
 					end if
 				else
 					do source = 1, effectivesize-1
-!						write(*,*) 'root receiving from rank ', source
+						!Only expect to recieve from processes with data inside the effective width of the array.
 						sourcell = source*sizeofchunk+1
 						sourceul = sourcell+sizeofchunk-1
 
-!						write(*,*) 'root inserting data from rank ', source, ' into coeff(', sourcell,':',sourceul, ',', i, ')'
+						!Root recieves and inserts data from other processes into coeff array
 						call MPI_Recv(coeff(sourcell:sourceul, i), ul-ll+1, MPI_DOUBLE_PRECISION, source, 0, comm, status, ierr)
 
 					end do
-
-!					write(*,*)
-!					write(*,*) 'updated data on rank 0'
-!					write(*,*) coeff(:, i)
 				end if
 
 				!Broadcasting updated data back to processes other than root
 				call MPI_Bcast(coeff(:, i), npow2, MPI_DOUBLE_PRECISION, 0, comm, ierr)
-!				if (rank .ne. 0) then
-!					write(*,*) 'rank ', rank, ' recieved updated coeff array slice'
-!				end if
 
-!				write(*,*)
-!				write(*,*)
 			end if
-
-!			write(*,*)
-
 		end do
-
-!		if (rank == 0) then
-!
-!			do i = 0, numsteps
-!
-!				write(*,*) coeff(:, i)
-!
-!			end do
-!
-!		end if
 
 		EvalEstrin = coeff(1, numsteps)
 
