@@ -207,7 +207,8 @@ module modPolyEval
 			if (arraywidthinuse < effectivesize) then
 				!If the array width in use at this step is greater than the active/effective number of MPI processes at this step
 				!then reduce the effective number of MPI processes.
-				!i.e. if at this step there is only 8 coefficients (i.e. array width of 8) and there are 16 MPI processes, then r
+				!i.e. if at this step there is only 8 coefficients (i.e. array width of 8) and there are 16 MPI processes,
+				!then reduce the effective number of MPI processes by a factor of two.
 				effectivesize = effectivesize/2
 			end if
 
