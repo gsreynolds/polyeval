@@ -171,7 +171,7 @@ module modPolyEval
 		numsteps = log(real(npow2))/log(2.0d0)
 		allocate(powers(numsteps))
 
-		!Evaluate using Estrin's Method
+		!Build the powers array
 		powers(1) = poly%x
 		do i = 2, numsteps
 			powers(i) = powers(i-1)**2
@@ -180,6 +180,7 @@ module modPolyEval
 		!Populate the first (0) row of the coeff array with the polynomial coefficients
 		coeff(1+shift:npow2, 0) = poly%f(:)
 
+		!Evaluate using Estrin's Method
 		do i = 1, numsteps
 
 			!$omp parallel do default(none) shared(coeff, powers, npow2, i) private(j)
