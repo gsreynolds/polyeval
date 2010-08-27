@@ -144,7 +144,8 @@ module modPolyEval
 		integer, intent(IN) :: rank, size, comm
 		real (kind=prec), allocatable, dimension(:) :: func, powers
 		real (kind=prec), allocatable, dimension(:,:) :: coeff
-		integer :: i,j,numsteps, shift, nearestpoweroftwo, npow2, ll, ul, source, sourcell, sourceul, sizeofchunk
+		integer :: i,j,numsteps, shift, nearestpoweroftwo, npow2, ll, ul, source, sourcell, sourceul, sizeofchunk, arraywidthinuse
+		integer :: effectivesize
 
 		!MPI Variables
 		integer, dimension(MPI_STATUS_SIZE) :: status
@@ -191,27 +192,42 @@ module modPolyEval
 !		write(*,*) 'of ', size
 !		write(*,*) 'npow2', npow2
 
+		effectivesize = size
+
 		do i = 1, numsteps
 
 !			write(*,*) 'i', i
+			arraywidthinuse = npow2/(2**(i-1))
 
-			sizeofchunk = npow2/size
+			if (arraywidthinuse < effectivesize) then
+!				write(*,*) 'arraywidthinuse < size'
+				effectivesize = effectivesize/2
+!				write(*,*) 'new effective size', effectivesize
+			end if
 
-!			write(*,*) 'sizeofchunk', sizeofchunk
+			sizeofchunk = arraywidthinuse/effectivesize
+
+!			write(*,*) 'rank', rank, 'arraywidthinuse', arraywidthinuse, 'sizeofchunk', sizeofchunk
 
 			if (i .ne. numsteps) then
 				ll = rank*sizeofchunk+1
 				ul = ll+sizeofchunk-1
+!				write(*,*) 'rank', rank, 'i', i, 'll', ll, 'ul', ul
 			else
 				ll=1
 				ul=1
 			end if
 
-!			write(*,*) 'll', ll, 'ul', ul
+!			write(*,*) '2 rank', rank, 'i', i, 'll', ll, 'ul', ul
 
-			do j = ll, ul
-				coeff(j, i) = coeff(2*j-1, i-1)*powers(i)+coeff(2*j, i-1)
-			end do
+			if (rank <= effectivesize - 1) then
+!				write(*,*) 'i', i, 'rank', rank, 'do calc', ' effectivesize', effectivesize
+
+				do j = ll, ul
+					coeff(j, i) = coeff(2*j-1, i-1)*powers(i)+coeff(2*j, i-1)
+				end do
+			end if
+!			call FLUSH(6)
 
 !			write(*,*)
 !			write(*,*) 'rank ', rank, ' data'
@@ -221,18 +237,21 @@ module modPolyEval
 			if (i .ne. numsteps) then
 
 				if (rank .ne. 0) then
-
-!					write(*,*) 'rank', rank, 'sending to root'
-!					write(*,*) 'data: ', coeff(ll:ul, i)
-					call MPI_SSend(coeff(ll:ul, i), ul-ll+1, MPI_DOUBLE_PRECISION, 0, 0, comm, ierr)
-
+					if (rank <= effectivesize - 1) then
+						!Don't send data outside of the width of the array in use at this step
+!						write(*,*) 'rank', rank, 'sending to root'
+!						write(*,*) 'data: ', coeff(ll:ul, i)
+						call MPI_SSend(coeff(ll:ul, i), ul-ll+1, MPI_DOUBLE_PRECISION, 0, 0, comm, ierr)
+					end if
 				else
-					do source = 1, size-1
+					do source = 1, effectivesize-1
 !						write(*,*) 'root receiving from rank ', source
 						sourcell = source*sizeofchunk+1
 						sourceul = sourcell+sizeofchunk-1
+
 !						write(*,*) 'root inserting data from rank ', source, ' into coeff(', sourcell,':',sourceul, ',', i, ')'
 						call MPI_Recv(coeff(sourcell:sourceul, i), ul-ll+1, MPI_DOUBLE_PRECISION, source, 0, comm, status, ierr)
+
 					end do
 
 !					write(*,*)
@@ -246,6 +265,8 @@ module modPolyEval
 !					write(*,*) 'rank ', rank, ' recieved updated coeff array slice'
 !				end if
 
+!				write(*,*)
+!				write(*,*)
 			end if
 
 !			write(*,*)
