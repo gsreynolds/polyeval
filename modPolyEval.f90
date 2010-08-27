@@ -36,6 +36,8 @@ module modPolyEval
    		real (kind=prec), dimension(poly%n) :: monomial
 
    		do i = 1, poly%n-1
+   			!Build up the monomial value by taking the coefficient
+   			!and then multiplying by the variable values raised to the respective power
 			monomial(i) = poly%f(i)*poly%x**(poly%n-i)
    		end do
 
@@ -56,6 +58,8 @@ module modPolyEval
 
    		do i = 1, poly%n-1
 			monomial(i) = poly%f(i)
+			!Build up the power required from x^2 and x
+			!i.e. x^7 = x^2 * x^2 * x^2 * x
 			numSteps = (poly%n-i)/2
 			do j = 1, numSteps
 				monomial(i) = monomial(i) * x2
@@ -78,6 +82,8 @@ module modPolyEval
    		real (kind=prec), dimension(poly%n) :: monomial
 
    		do i = 1, poly%n-1
+   			!Build up the monomial value by taking the coefficient
+   			!and then multiplying by the variable values raised to the respective power
 			monomial(i) = poly%f(i)
 			do j = 1, poly%m
 				monomial(i) = monomial(i)*poly%vars(j)**poly%powers(j,i)
@@ -97,6 +103,7 @@ module modPolyEval
    		real (kind=prec), dimension(poly%n) :: monomial
    		real (kind=prec), dimension(poly%m) :: vars2 !variables, squared
 
+		!Pre-calculate all the x^2, y^2 etc variables
    		do i = 1, poly%m
    			vars2(i) = poly%vars(i)*poly%vars(i)
    		end do
@@ -105,6 +112,8 @@ module modPolyEval
 			monomial(i) = poly%f(i)
 
 			do j = 1, poly%m
+				!Build up the power required from x^2 and x
+				!i.e. x^7 = x^2 * x^2 * x^2 * x
 				numSteps = (poly%powers(j,i))/2
 				do k = 1, numSteps
 					monomial(i) = monomial(i) * vars2(j)
@@ -142,7 +151,7 @@ module modPolyEval
 
 		type(polynomial), intent(IN) :: poly
 		integer, intent(IN) :: rank, size, comm
-		real (kind=prec), allocatable, dimension(:) :: func, powers
+		real (kind=prec), allocatable, dimension(:) :: powers
 		real (kind=prec), allocatable, dimension(:,:) :: coeff
 		integer :: i,j,numsteps, shift, nearestpoweroftwo, npow2, ll, ul, source, sourcell, sourceul, sizeofchunk, arraywidthinuse
 		integer :: effectivesize
@@ -171,26 +180,24 @@ module modPolyEval
 			npow2 = poly%n
 		end if
 
-		allocate(func(npow2))
-		func(:) = 0
-
+		!Calculate the number of calculation steps required to reach the result
 		numsteps = log(real(npow2))/log(2.0d0)
 		allocate(coeff(npow2, 0:numsteps))
 		coeff(:,:) = 0
 		allocate(powers(numsteps))
 
-		func(1+shift:npow2) = poly%f(:)
-
-		!Evaluate using Estrin's Method
+		!Build the powers array
 		powers(1) = poly%x
 		do i = 2, numsteps
 			powers(i) = powers(i-1)**2
 		end do
 
-		coeff(:, 0) = func
+		!Populate the first (0) row of the coeff array with the polynomial coefficients
+		coeff(1+shift:npow2, 0) = poly%f(:)
 
 		effectivesize = size
 
+		!Evaluate using Estrin's Method
 		do i = 1, numsteps
 			!Work out the number of elements in the current array row that are "active"/in use.
 			!i.e. for a 512 coefficient poly, at step 1 there are 512 coefficients but at step two there are only 256 coefficients
