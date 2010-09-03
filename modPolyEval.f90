@@ -2,7 +2,7 @@ module modPolyEval
     implicit none
 
 	integer, parameter :: prec = kind(1.0d0)
-	integer, parameter :: long = selected_int_kind(8)
+	integer, parameter :: long = selected_int_kind(12)
 
    	type polynomial
    		integer :: n
