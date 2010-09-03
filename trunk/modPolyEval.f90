@@ -2,6 +2,7 @@ module modPolyEval
     implicit none
 
 	integer, parameter :: prec = kind(1.0d0)
+	integer, parameter :: long = selected_int_kind(8)
 
    	type polynomial
    		integer :: n
@@ -14,7 +15,7 @@ module modPolyEval
 		integer :: m
 		real (kind=prec), allocatable, dimension(:) :: f !Coefficients of polynomial
 		real (kind=prec), allocatable, dimension(:) :: vars !Independent variables
-		real (kind=prec), allocatable, dimension(:,:) :: powers
+		integer (kind=long), allocatable, dimension(:,:) :: powers
 	end type
 
 	!Evaluate by brute force
@@ -118,7 +119,7 @@ module modPolyEval
 				do k = 1, numSteps
 					monomial(i) = monomial(i) * vars2(j)
 				end do
-				if (mod(poly%powers(j,i), 2.0d0) .ne. 0) then
+				if (mod(poly%powers(j,i), 2) .ne. 0) then
 					monomial(i) = monomial(i) * poly%vars(j)
 	   			end if
    			end do
