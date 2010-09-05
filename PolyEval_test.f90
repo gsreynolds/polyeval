@@ -3,112 +3,125 @@ program PolyEval_test
 	use modPolyEval
 	implicit none
 
-	integer, parameter :: MAXITER = 1!000000000
-	real (kind=prec), parameter :: a = 3.068474, b=0.0d0, c=20.857847, d=0.0d0, e=0.757463, f=0.0d0, g=8.673527
-	real (kind=prec), parameter :: h=765.638467, i=0.0d0, j=-20.889708, k=67.786429, l=-0.754380, m= 1120.000000
-	real (kind=prec) :: x, estrin, horner, brute, brute_multi, bruteopt, bruteopt_multi
-	real (kind=prec) :: startTime, endTime
-	real (kind=prec) :: timeDiff, averageIterTime
-	integer :: loop
+	integer, parameter :: MAXITER = 1!000
+	real(kind=prec), allocatable, dimension(:) :: rndArray
+	integer :: i, numTerms
+	integer, parameter :: numTestCases = 8
+	integer, dimension(numTestCases) :: testCases
 	type(polynomial) :: poly
-	type(polynomial_multi) :: poly_multi
 
-	poly%x = 2.0
-	poly%n = 7
-	allocate(poly%f(poly%n))
-	poly%f = (/a,a,a,a,a,a,a/)
+	testCases = (/5,15,30,100,500,1000,2000,4000/)
 
-	write(*,*) 'Brute force x'
+	do i = 1, numTestCases
 
-	startTime = omp_get_wtime()
-	do loop = 1, MAXITER
-		brute = Eval(poly)
+		if (i > 1) then
+			deallocate(poly%f)
+		end if
+
+		numTerms = testCases(i)
+
+		write(*,*) 'Test Case ', i
+		write(*,*) 'Number of terms: ', numTerms
+		write(*,*)
+
+		poly%x = 1.1
+		poly%n = numTerms
+		allocate(poly%f(poly%n))
+
+		call generateRandomArray(poly%n, rndArray)
+
+		poly%f(:) = rndArray(:)
+		deallocate(rndArray)
+
+		call evaluationMethods(poly)
+
+		write(*,*)
+		write(*,*) '==============='
+		write(*,*)
+
 	end do
-	endTime = omp_get_wtime()
 
-	timeDiff = endTime - startTime
-    write(*,*) 'result =', brute
-    write(*,*) 'Completed in', timeDiff
-    write(*,*)
+contains
 
-    write(*,*) 'Brute force (optimised) x'
+	subroutine generateRandomArray(size, rndArray)
+		integer, intent(IN) :: size
+		real(kind=prec), allocatable, intent(OUT), dimension(:) :: rndArray
+		integer :: seedSize,date(8)
+		integer, allocatable  :: seed(:)
 
-	startTime = omp_get_wtime()
-	do loop = 1, MAXITER
-		bruteopt = EvalOpt(poly)
-	end do
-	endTime = omp_get_wtime()
+		call date_and_time(values=date)
+	 	call random_seed(SIZE=seedSize)
+	 	allocate( seed(seedSize) )
+		call random_seed(GET=seed)
+	 	seed = seed * date(8)      ! date(8) is milliseconds
+	 	call random_seed(PUT=seed)
 
-	timeDiff = endTime - startTime
-    write(*,*) 'result =', bruteopt
-    write(*,*) 'Completed in', timeDiff
-    write(*,*)
+		allocate(rndArray(size))
 
-    write(*,*) 'Brute force multi'
+		call random_number(rndArray)
 
-    poly_multi%m = 2
-	allocate(poly_multi%vars(poly_multi%m))
-    poly_multi%vars(1)=2.0
-    poly_multi%vars(2)=3.0
-    poly_multi%n=poly%n
-    allocate(poly_multi%f(poly_multi%n))
-    allocate(poly_multi%powers(poly_multi%m,poly_multi%n-1))
-    poly_multi%f = poly%f
-	poly_multi%powers(1,:) = (/2,2,1,1,1,0/)
-	poly_multi%powers(2,:) = (/2,1,2,1,0,1/)
+		rndArray(:) = rndArray(:) * 10
 
-	startTime = omp_get_wtime()
-	do loop = 1, MAXITER
-		brute_multi = Eval_multi(poly_multi)
-	end do
-	endTime = omp_get_wtime()
+	end subroutine generateRandomArray
 
-	timeDiff = endTime - startTime
-    write(*,*) 'result =', brute_multi
-    write(*,*) 'Completed in', timeDiff
-    write(*,*)
+	subroutine evaluationMethods(poly)
 
-    write(*,*) 'Brute force multi (optimised)'
-	startTime = omp_get_wtime()
-	do loop = 1, MAXITER
-		bruteopt_multi = EvalOpt_multi(poly_multi)
-	end do
-	endTime = omp_get_wtime()
+		type(polynomial), intent(IN) :: poly
+		integer, parameter :: numMethods =  4
+		real (kind=prec), dimension(numMethods) :: results, averageIterTime
+		real (kind=prec) :: startTime, endTime, timeDiff
+		integer :: i, loop
 
-	timeDiff = endTime - startTime
-    write(*,*) 'result =', bruteopt_multi
-    write(*,*) 'Completed in', timeDiff
-    write(*,*)
+		!Brute force
 
-	write(*,*) '==============='
-	write(*,*)
-	write(*,*) 'Horners Form'
+		startTime = omp_get_wtime()
+		do loop = 1, MAXITER
+			results(1) = Eval(poly)
+		end do
+		endTime = omp_get_wtime()
 
-	startTime = omp_get_wtime()
-	do loop = 1, MAXITER
-		horner = EvalHorner(poly)
-	end do
-	endTime = omp_get_wtime()
+		timeDiff = endTime - startTime
+		averageIterTime(1) = timeDiff/MAXITER
 
-	timeDiff = endTime - startTime
-    write(*,*) 'result =', horner
-    write(*,*) 'Completed in', timeDiff
+	    !Brute force (optimised)
 
-	write(*,*)
-	write(*,*) 'Estrins Method'
+		startTime = omp_get_wtime()
+		do loop = 1, MAXITER
+			results(2) = EvalOpt(poly)
+		end do
+		endTime = omp_get_wtime()
 
-	startTime = omp_get_wtime()
-	do loop = 1, MAXITER
-		estrin = EvalEstrin(poly)
-	end do
-	endTime = omp_get_wtime()
+		timeDiff = endTime - startTime
+		averageIterTime(2) = timeDiff/MAXITER
 
-	timeDiff = endTime - startTime
-    write(*,*) 'result =', estrin
-	write(*,*) 'Completed in', timeDiff
+		!Horners Form
 
-	write(*,*)
-	write(*,*) 'Horner - Estrin'
-	write(*,*) 'diff   =', horner-estrin
+		startTime = omp_get_wtime()
+		do loop = 1, MAXITER
+			results(3) = EvalHorner(poly)
+		end do
+		endTime = omp_get_wtime()
+
+		timeDiff = endTime - startTime
+		averageIterTime(3) = timeDiff/MAXITER
+
+		!Estrins Method
+
+		startTime = omp_get_wtime()
+		do loop = 1, MAXITER
+			results(4) = EvalEstrin(poly)
+		end do
+		endTime = omp_get_wtime()
+
+		timeDiff = endTime - startTime
+		averageIterTime(4) = timeDiff/MAXITER
+
+		write(*,*) 'Brute Force               |  Brute Force - Opt        |  Horners Form             |  Estrins Method'
+		write(*,*) 'Results:'
+		write(*,*) (results(i),',', i=1,numMethods)
+		write(*,*) 'Average Iteration Times:'
+		write(*,*) (averageIterTime(i),',', i=1,numMethods)
+
+	end subroutine evaluationMethods
 
 end program PolyEval_test
