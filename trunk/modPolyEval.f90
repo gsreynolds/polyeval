@@ -5,14 +5,14 @@ module modPolyEval
 	integer, parameter :: long = selected_int_kind(12)
 
    	type polynomial
-   		integer :: n
+   		integer :: n !Number of coefficients
    		real (kind=prec), allocatable, dimension(:) :: f !Coefficients of polynomial
 		real (kind=prec) :: x !Value of independent variable
 	end type
 
 	type polynomial_multi
-		integer :: n
-		integer :: m
+		integer :: n !Number of coefficients
+		integer :: m !Number of variables
 		real (kind=prec), allocatable, dimension(:) :: f !Coefficients of polynomial
 		real (kind=prec), allocatable, dimension(:) :: vars !Independent variables
 		integer (kind=long), allocatable, dimension(:,:) :: powers
